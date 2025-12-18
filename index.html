@@ -13,46 +13,112 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display&display=swap');
         
-        * { box-sizing: border-box; }
-        
+        /* 全局設定：預設 Kiosk 模式 (無捲軸) */
         body, html {
             margin: 0; padding: 0;
             background-color: #1A1A1A;
-            width: 100%; min-height: 100vh;
-            /* 允許手機垂直捲動 */
-            overflow-x: hidden; 
-            overflow-y: auto;
+            width: 100%; height: 100%;
+            overflow: hidden; /* 預設隱藏捲軸 */
             -webkit-user-select: none; user-select: none;
         }
+
+        /* 內容容器 */
+        #root { 
+            width: 2160px; height: 3840px; 
+            background-color: #1A1A1A;
+            opacity: 0; /* 避免閃爍，計算完才顯示 */
+            transition: opacity 0.3s ease-in;
+        }
         
-        /* 載入畫面 */
+        button { cursor: pointer; transition: opacity 0.1s; }
+        button:active { opacity: 0.8; }
+        button:focus { outline: none; }
+        
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1A1A1A; color: #B8860B;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 24px; font-family: 'Inter', sans-serif;
-            z-index: 99999; transition: opacity 0.5s;
-        }
-
-        /* 內容容器：預設隱藏，等計算完才顯示 */
-        #root { 
-            opacity: 0; 
-            transition: opacity 0.3s ease-in;
-            transform-origin: top left;
-            will-change: transform; /* 讓手機 GPU 預備 */
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; font-family: 'Inter', sans-serif;
+            z-index: 9999;
         }
     </style>
 </head>
 <body>
-    <div id="loading"><div>System Loading...</div></div>
+    <div id="loading">System Loading...</div>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useCallback, useEffect, useLayoutEffect, useRef } = React;
+        const { useState, useCallback, useEffect, useLayoutEffect } = React;
         const getBaseUrl = () => window.location.href.split('?')[0];
 
         // ------------------------------------------------------------------
-        // 資料設定區 (DATA)
+        // ★★★ 雙重排版引擎 (Dual Layout Engine) ★★★
+        // ------------------------------------------------------------------
+        const updateLayout = () => {
+            const root = document.getElementById('root');
+            const body = document.body;
+            if (!root) return;
+
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const targetW = 2160;
+            const targetH = 3840;
+
+            // 判斷是否為手機 (寬度小於 1000px 視為手機)
+            const isMobile = screenW < 1000;
+
+            if (isMobile) {
+                // === 手機模式 (Mobile) ===
+                // 1. 允許捲動
+                body.style.overflowY = 'auto';
+                body.style.overflowX = 'hidden';
+                
+                // 2. 計算縮放：寬度填滿螢幕
+                const scale = screenW / targetW;
+                
+                // 3. 設定樣式：靠左上角對齊
+                root.style.position = 'absolute';
+                root.style.left = '0px';
+                root.style.top = '0px';
+                root.style.transformOrigin = 'top left';
+                root.style.transform = `scale(${scale})`;
+                
+                // 4. 撐開 Body 高度，讓手機可以滑動
+                body.style.height = `${targetH * scale}px`;
+
+            } else {
+                // === Kiosk 模式 (Desktop) ===
+                // 1. 禁止捲動 (修正之前的問題)
+                body.style.overflow = 'hidden';
+                body.style.height = '100%';
+
+                // 2. 計算縮放：保持 2160px 寬度，並置中
+                // 如果螢幕夠大 (如 4K)，scale = 1
+                // 如果螢幕較小 (如 1080p)，自動縮小以適應高度或寬度
+                const scale = Math.min(screenW / targetW, screenH / targetH);
+                
+                // 3. 設定樣式：絕對置中 (Center Center)
+                root.style.position = 'absolute';
+                root.style.left = '50%';
+                root.style.top = '50%';
+                root.style.transformOrigin = 'center center';
+                // 使用 translate(-50%, -50%) 來達成完美置中
+                root.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            }
+
+            // 顯示畫面
+            root.style.opacity = 1;
+            const loader = document.getElementById('loading');
+            if(loader) loader.style.display = 'none';
+        };
+
+        // 初始化排版
+        window.addEventListener('load', updateLayout);
+        window.addEventListener('resize', updateLayout);
+        setTimeout(updateLayout, 100); // 雙重保險
+
+        // ------------------------------------------------------------------
+        // 資料設定區
         // ------------------------------------------------------------------
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
@@ -187,63 +253,55 @@
             const [shareUrl, setShareUrl] = useState('');
             const [isShareMode, setIsShareMode] = useState(false);
 
+            // 強制觸發排版計算
+            useEffect(() => { setTimeout(updateLayout, 300); }, []);
+
             const texts = translations[currentLang];
             const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-            // --- 核心邏輯：手機版/Kiosk版 路由判斷 ---
-            useLayoutEffect(() => {
+            useEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const mode = params.get('mode');
                 
-                // 讀取網址參數
                 if (mode === 'share') {
                     setIsShareMode(true);
-                    
                     const name = params.get('name') || '';
                     const type = params.get('type') || 'NT';
                     const p1 = parseInt(params.get('p1') || '0');
                     const p2 = parseInt(params.get('p2') || '1');
-                    const lang = params.get('lang') || 'zh-TW'; // 支援網址帶語言參數
+                    const lang = params.get('lang') || 'zh-TW';
 
                     // 設定語言
-                    setCurrentLang(lang === 'en' ? 'en' : 'zh-TW');
-
-                    // 計算結果
+                    if (lang === 'en' || lang === 'zh-TW') {
+                        setCurrentLang(lang);
+                    }
+                    
                     let categoryKey = 'NT';
                     if(type.includes('N') && type.includes('T')) categoryKey='NT';
                     else if(type.includes('N') && type.includes('F')) categoryKey='NF';
                     else if(type.includes('S') && type.includes('J')) categoryKey='SJ';
                     else if(type.includes('S') && type.includes('P')) categoryKey='SP';
 
-                    // 確保使用正確語言包的資料
+                    // 確保使用正確語言包
                     const targetContent = lang === 'en' ? en_Content : zh_TW_Content;
                     const originalResultData = targetContent.resultsMap[categoryKey];
-                    
-                    // 防呆：確保產品存在
-                    const prod1 = originalResultData.products[p1] || originalResultData.products[0];
-                    const prod2 = originalResultData.products[p2] || originalResultData.products[1];
-                    
+                    const selectedProducts = [
+                        originalResultData.products[p1] || originalResultData.products[0],
+                        originalResultData.products[p2] || originalResultData.products[1]
+                    ];
+
                     setPlayerName(name);
-                    setResult({ mbtiType: type, resultData: { ...originalResultData, products: [prod1, prod2] } });
+                    setResult({ mbtiType: type, resultData: { ...originalResultData, products: selectedProducts } });
                     setCurrentPage('result');
                 } else {
-                    // Kiosk 模式：閒置自動重置
                     let timer;
                     const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
-                    ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'].forEach(e => window.addEventListener(e, reset));
+                    const events = ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'];
+                    events.forEach(e => window.addEventListener(e, reset));
                     reset();
-                    return () => { clearTimeout(timer); };
+                    return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
                 }
-            }, []); // 只執行一次
-
-            // 確保內容載入後顯示畫面 (解決黑畫面關鍵)
-            useEffect(() => {
-                const root = document.getElementById('root');
-                const loader = document.getElementById('loading');
-                if(root) root.style.opacity = 1;
-                if(loader) loader.style.opacity = 0;
-                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500);
-            });
+            }, []);
 
             const restartQuiz = useCallback(() => {
                 setCurrentPage('intro');
@@ -283,14 +341,13 @@
                 setResult({ mbtiType, resultData });
 
                 const baseUrl = getBaseUrl();
-                // 產生分享連結時帶上語言參數
                 const params = new URLSearchParams({
                     mode: 'share',
                     name: playerName || '',
                     type: mbtiType,
                     p1: p1Index,
                     p2: p2Index,
-                    lang: currentLang // 傳遞當前語言
+                    lang: currentLang
                 });
                 setShareUrl(`${baseUrl}?${params.toString()}`);
                 setCurrentPage('result');
@@ -362,9 +419,9 @@
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
                                 </div>
                                 
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '640px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
+                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '723px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
+                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
                                 
                                 <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
 
@@ -376,14 +433,13 @@
                                 <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1269px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
                                     <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
-                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2152px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
+                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
                                 
                                 <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
                                 <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
                             </>
                         )}
 
-                        {/* Name Input & Questions 保持不變 ... */}
                         {currentPage === 'nameInput' && (
                             <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 60 }}>
                                 <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.nameInput.title}</div>
@@ -464,7 +520,7 @@
                                 </div>
 
                                 {!isShareMode && (
-                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '3120px' : '2960px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
+                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '3020px' : '2980px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
                                         <button onClick={restartQuiz} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#D4AF37', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#FFFFFF' }}>{texts.restart}</button>
                                         <button onClick={goToSharePage} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#D4AF37' }}>{texts.share}</button>
                                     </div>

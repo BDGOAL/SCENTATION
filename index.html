@@ -15,53 +15,52 @@
         
         * { box-sizing: border-box; }
 
-        /* 全局設定 */
         body, html {
             margin: 0; padding: 0;
             background-color: #1A1A1A;
             width: 100%; height: 100%;
             -webkit-user-select: none; user-select: none;
-            overflow: hidden; /* 預設 Kiosk 模式隱藏捲軸 */
+            overflow: hidden; /* Kiosk 預設無捲軸 */
         }
 
-        /* 內容主容器 */
         #root { 
             width: 2160px; height: 3840px; 
             background-color: #1A1A1A;
-            opacity: 0; transition: opacity 0.3s ease-in;
+            opacity: 0; transition: opacity 0.5s ease-in; /* 淡入效果 */
         }
         
         button { cursor: pointer; transition: opacity 0.1s; }
         button:active { opacity: 0.8; }
         button:focus { outline: none; }
         
-        /* 載入與錯誤提示 */
+        /* 載入畫面 */
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1A1A1A; color: #B8860B;
-            display: flex; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             font-size: 40px; font-family: 'Inter', sans-serif;
             z-index: 9999;
         }
+        
+        /* 錯誤提示 (防止黑畫面) */
         #fatal-error {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); color: #ff5555; z-index: 100000;
-            padding: 40px; font-size: 24px; white-space: pre-wrap; box-sizing: border-box; overflow: auto;
+            background: rgba(0,0,0,0.9); color: #ff5555; z-index: 100000;
+            padding: 50px; font-size: 30px; white-space: pre-wrap; overflow: auto;
         }
     </style>
 </head>
 <body>
     <div id="fatal-error"></div>
-    <div id="loading">System Loading...</div>
+    <div id="loading"><div>Loading System...</div></div>
     <div id="root"></div>
 
     <script>
-        // 錯誤攔截器
-        window.onerror = function(msg, url, line, col, error) {
+        window.onerror = function(msg, url, line) {
             document.getElementById('loading').style.display = 'none';
-            const errBox = document.getElementById('fatal-error');
-            errBox.style.display = 'block';
-            errBox.innerHTML = "⚠️ Error:\n" + msg + "\nLine: " + line;
+            const err = document.getElementById('fatal-error');
+            err.style.display = 'block';
+            err.innerHTML = "⚠️ System Error:\n" + msg + "\nLine: " + line;
         };
     </script>
 
@@ -69,7 +68,7 @@
         const { useState, useCallback, useEffect, useLayoutEffect, useRef } = React;
         const getBaseUrl = () => window.location.href.split('?')[0];
 
-        // --- 核心排版引擎 ---
+        // --- 排版引擎 (自動切換 Kiosk / 手機) ---
         const updateLayout = () => {
             const root = document.getElementById('root');
             const body = document.body;
@@ -82,18 +81,18 @@
             const isMobile = screenW < 1000;
 
             if (isMobile) {
-                // 手機模式：允許捲動，靠左上對齊
+                // 手機：啟用捲軸，靠左上對齊
                 body.style.overflowY = 'auto';
                 body.style.overflowX = 'hidden';
                 const scale = screenW / targetW;
                 root.style.position = 'absolute';
-                root.style.left = '0px';
-                root.style.top = '0px';
+                root.style.left = '0';
+                root.style.top = '0';
                 root.style.transformOrigin = 'top left';
                 root.style.transform = `scale(${scale})`;
                 body.style.height = `${targetH * scale}px`;
             } else {
-                // Kiosk 模式：禁止捲動，絕對置中
+                // Kiosk：禁用捲軸，絕對置中
                 body.style.overflow = 'hidden';
                 body.style.height = '100%';
                 const scale = Math.min(screenW / targetW, screenH / targetH);
@@ -103,6 +102,7 @@
                 root.style.transformOrigin = 'center center';
                 root.style.transform = `translate(-50%, -50%) scale(${scale})`;
             }
+            // 顯示畫面
             root.style.opacity = 1;
             const loader = document.getElementById('loading');
             if(loader) loader.style.display = 'none';
@@ -110,9 +110,9 @@
 
         window.addEventListener('load', updateLayout);
         window.addEventListener('resize', updateLayout);
-        setTimeout(updateLayout, 200);
+        setTimeout(updateLayout, 300);
 
-        // --- 資料設定 ---
+        // --- 圖片資源 ---
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
         const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
@@ -226,19 +226,31 @@
 
         const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
 
+        // ★★★ 防止崩潰的 QR Code 組件 ★★★
         const QRCodeComp = ({ value, size }) => {
             const qrRef = useRef(null);
             useEffect(() => {
+                // 延遲繪製，避免 React 還沒掛載 DOM 就畫圖
                 const timer = setTimeout(() => {
                     if (qrRef.current && window.QRCode && value) {
                         try {
                             qrRef.current.innerHTML = "";
-                            new QRCode(qrRef.current, { text: value, width: size, height: size, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                            new QRCode(qrRef.current, { 
+                                text: value, 
+                                width: size, 
+                                height: size, 
+                                colorDark: "#000000", 
+                                colorLight: "#ffffff", 
+                                correctLevel: QRCode.CorrectLevel.H 
+                            });
                         } catch (e) {
                             console.error(e);
+                            qrRef.current.innerHTML = "<p style='color:black'>QR Code Error</p>";
                         }
+                    } else if (!window.QRCode) {
+                        if(qrRef.current) qrRef.current.innerHTML = "<p style='color:black; font-size:20px'>Library Loading...</p>";
                     }
-                }, 100);
+                }, 100); // 0.1秒緩衝
                 return () => clearTimeout(timer);
             }, [value, size]);
             return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
@@ -258,6 +270,7 @@
             const texts = translations[currentLang];
             const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+            // 初始化邏輯 (支援分享模式)
             useEffect(() => {
                 try {
                     const params = new URLSearchParams(window.location.search);
@@ -290,11 +303,12 @@
                             setCurrentPage('result');
                         }
                     } else {
+                        // Kiosk 閒置重置
                         let timer;
                         const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
                         ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'].forEach(e => window.addEventListener(e, reset));
                         reset();
-                        return () => { clearTimeout(timer); };
+                        return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
                     }
                 } catch(e) {
                     console.error("Init Error", e);
@@ -371,6 +385,7 @@
 
             return (
                 <div style={{ position: 'relative', width: '2160px', height: '3840px', boxSizing: 'border-box' }}>
+                    {/* 背景圖 */}
                     <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 }}>
                         <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
@@ -416,17 +431,23 @@
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '6px solid #B8860B' }}></div>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
                                 </div>
+                                
                                 <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
+                                
                                 <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
-                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '940px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
+                                
+                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
+
                                 <div style={{ position: 'absolute', width: '1331px', height: '38px', left: 'calc(50% - 1331px/2 + 0.5px)', top: currentLang === 'en' ? '1160px' : '1040px' }}>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '12px solid #B8860B' }}></div>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '6px solid #B8860B' }}></div>
                                 </div>
+
                                 <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1300px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
                                     <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                                 <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
+                                
                                 <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
                                 <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
                             </>

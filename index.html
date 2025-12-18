@@ -13,101 +13,51 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display&display=swap');
         
+        * { box-sizing: border-box; }
+        
         body, html {
             margin: 0; padding: 0;
             background-color: #1A1A1A;
-            overflow: hidden; /* 防止捲軸出現 */
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: flex-start; /* 改為靠上對齊 */
+            width: 100%; min-height: 100vh;
+            /* 允許手機垂直捲動 */
+            overflow-x: hidden; 
+            overflow-y: auto;
             -webkit-user-select: none; user-select: none;
         }
         
-        #root { 
-            width: 2160px; height: 3840px; 
-            position: absolute; /* 改為絕對定位 */
-            top: 0; left: 0;
-            /* 關鍵修正 1: 原點設為左上角，確保縮小後留在螢幕內 */
-            transform-origin: top left; 
-            background-color: #1A1A1A;
-            opacity: 0; /* 關鍵修正 2: 預設隱藏，防止閃爍 */
-            transition: opacity 0.5s ease-in; /* 淡入效果 */
-        }
-        
-        button { cursor: pointer; transition: opacity 0.1s; }
-        button:active { opacity: 0.8; }
-        button:focus { outline: none; }
-        
-        #error-box { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: #ff5555; z-index: 99999; padding: 40px; font-size: 24px; white-space: pre-wrap; box-sizing: border-box; overflow: auto; }
-        
+        /* 載入畫面 */
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1A1A1A; color: #B8860B;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 30px; font-family: 'Inter', sans-serif;
-            z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 24px; font-family: 'Inter', sans-serif;
+            z-index: 99999; transition: opacity 0.5s;
+        }
+
+        /* 內容容器：預設隱藏，等計算完才顯示 */
+        #root { 
+            opacity: 0; 
+            transition: opacity 0.3s ease-in;
+            transform-origin: top left;
+            will-change: transform; /* 讓手機 GPU 預備 */
         }
     </style>
 </head>
 <body>
-    <div id="error-box"></div>
-    <div id="loading">Loading...</div>
+    <div id="loading"><div>System Loading...</div></div>
     <div id="root"></div>
 
-    <script>
-        window.onerror = function(msg, url, line, col, error) {
-            document.getElementById('loading').style.display = 'none';
-            const errorBox = document.getElementById('error-box');
-            errorBox.style.display = 'block';
-            errorBox.innerHTML = "⚠️ Error:\n" + msg + "\nLine: " + line;
-        };
-    </script>
-
     <script type="text/babel">
-        // ------------------------------------------------------------------
-        // ★★★ 核心縮放邏輯 (Mobile Scaling Logic) ★★★
-        // ------------------------------------------------------------------
-        const initScale = () => {
-            const root = document.getElementById('root');
-            if (!root) return;
-
-            // 取得當前視窗寬度
-            const screenW = window.innerWidth;
-            const targetW = 2160; // 我們的設計稿寬度
-
-            // 計算縮放比例
-            // 如果螢幕比 2160 小 (就是手機或一般電腦)，就縮小
-            // 如果是在 Kiosk (2160寬)，scale 就是 1
-            let scale = screenW / targetW;
-            
-            // 應用縮放
-            root.style.transform = `scale(${scale})`;
-            
-            // 調整 Body 高度以適應縮放後的內容
-            document.body.style.height = `${3840 * scale}px`;
-            document.body.style.overflowY = 'auto'; // 允許垂直捲動
-            
-            // 顯示畫面 (解決閃爍問題)
-            setTimeout(() => {
-                root.style.opacity = '1';
-                const loader = document.getElementById('loading');
-                if(loader) loader.style.display = 'none';
-            }, 100);
-        };
-
-        // 監聽載入與視窗變化
-        window.addEventListener('load', initScale);
-        window.addEventListener('resize', initScale);
-        // 額外保險：React 渲染後再次觸發
-        setTimeout(initScale, 500);
-
-
-        const { useState, useCallback, useEffect, useRef } = React;
+        const { useState, useCallback, useEffect, useLayoutEffect, useRef } = React;
         const getBaseUrl = () => window.location.href.split('?')[0];
 
-        // 1. 圖片資源
+        // ------------------------------------------------------------------
+        // 資料設定區 (DATA)
+        // ------------------------------------------------------------------
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
         const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
+        
         const questionImages = {
             q1: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/1.png',
             q2: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/2.png',
@@ -217,6 +167,17 @@
 
         const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
 
+        const QRCodeComp = ({ value, size }) => {
+            const qrRef = useRef(null);
+            useEffect(() => {
+                if (qrRef.current && window.QRCode) {
+                    qrRef.current.innerHTML = "";
+                    new QRCode(qrRef.current, { text: value, width: size, height: size, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+                }
+            }, [value, size]);
+            return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
+        };
+
         const App = () => {
             const [currentPage, setCurrentPage] = useState('intro');
             const [currentLang, setCurrentLang] = useState('zh-TW');
@@ -226,49 +187,63 @@
             const [shareUrl, setShareUrl] = useState('');
             const [isShareMode, setIsShareMode] = useState(false);
 
-            useEffect(() => {
-                // 強制在 React 渲染後再次觸發縮放，確保手機版內容出現
-                setTimeout(initScale, 500); 
-            }, []);
-
             const texts = translations[currentLang];
             const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-            useEffect(() => {
+            // --- 核心邏輯：手機版/Kiosk版 路由判斷 ---
+            useLayoutEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const mode = params.get('mode');
                 
+                // 讀取網址參數
                 if (mode === 'share') {
                     setIsShareMode(true);
+                    
                     const name = params.get('name') || '';
                     const type = params.get('type') || 'NT';
                     const p1 = parseInt(params.get('p1') || '0');
                     const p2 = parseInt(params.get('p2') || '1');
-                    
+                    const lang = params.get('lang') || 'zh-TW'; // 支援網址帶語言參數
+
+                    // 設定語言
+                    setCurrentLang(lang === 'en' ? 'en' : 'zh-TW');
+
+                    // 計算結果
                     let categoryKey = 'NT';
                     if(type.includes('N') && type.includes('T')) categoryKey='NT';
                     else if(type.includes('N') && type.includes('F')) categoryKey='NF';
                     else if(type.includes('S') && type.includes('J')) categoryKey='SJ';
                     else if(type.includes('S') && type.includes('P')) categoryKey='SP';
 
-                    const originalResultData = translations['zh-TW'].resultsMap[categoryKey];
-                    // 安全獲取產品資料
+                    // 確保使用正確語言包的資料
+                    const targetContent = lang === 'en' ? en_Content : zh_TW_Content;
+                    const originalResultData = targetContent.resultsMap[categoryKey];
+                    
+                    // 防呆：確保產品存在
                     const prod1 = originalResultData.products[p1] || originalResultData.products[0];
                     const prod2 = originalResultData.products[p2] || originalResultData.products[1];
-                    const selectedProducts = [prod1, prod2];
-
+                    
                     setPlayerName(name);
-                    setResult({ mbtiType: type, resultData: { ...originalResultData, products: selectedProducts } });
+                    setResult({ mbtiType: type, resultData: { ...originalResultData, products: [prod1, prod2] } });
                     setCurrentPage('result');
                 } else {
+                    // Kiosk 模式：閒置自動重置
                     let timer;
                     const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
-                    const events = ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'];
-                    events.forEach(e => window.addEventListener(e, reset));
+                    ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'].forEach(e => window.addEventListener(e, reset));
                     reset();
-                    return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
+                    return () => { clearTimeout(timer); };
                 }
-            }, []);
+            }, []); // 只執行一次
+
+            // 確保內容載入後顯示畫面 (解決黑畫面關鍵)
+            useEffect(() => {
+                const root = document.getElementById('root');
+                const loader = document.getElementById('loading');
+                if(root) root.style.opacity = 1;
+                if(loader) loader.style.opacity = 0;
+                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500);
+            });
 
             const restartQuiz = useCallback(() => {
                 setCurrentPage('intro');
@@ -308,16 +283,18 @@
                 setResult({ mbtiType, resultData });
 
                 const baseUrl = getBaseUrl();
+                // 產生分享連結時帶上語言參數
                 const params = new URLSearchParams({
                     mode: 'share',
                     name: playerName || '',
                     type: mbtiType,
                     p1: p1Index,
-                    p2: p2Index
+                    p2: p2Index,
+                    lang: currentLang // 傳遞當前語言
                 });
                 setShareUrl(`${baseUrl}?${params.toString()}`);
                 setCurrentPage('result');
-            }, [playerName, texts.resultsMap]);
+            }, [playerName, texts.resultsMap, currentLang]);
 
             const handleAnswer = useCallback((scoreKey, isLastQuestion = false) => {
                 setScore(prevScore => {
@@ -387,7 +364,7 @@
                                 
                                 <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '640px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
+                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '723px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
                                 
                                 <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
 
@@ -396,16 +373,17 @@
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '6px solid #B8860B' }}></div>
                                 </div>
 
-                                <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1300px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1269px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
                                     <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
-                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
+                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2152px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
                                 
                                 <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
                                 <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
                             </>
                         )}
 
+                        {/* Name Input & Questions 保持不變 ... */}
                         {currentPage === 'nameInput' && (
                             <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 60 }}>
                                 <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.nameInput.title}</div>
@@ -486,7 +464,7 @@
                                 </div>
 
                                 {!isShareMode && (
-                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '2920px' : '2960px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
+                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '3120px' : '2960px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
                                         <button onClick={restartQuiz} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#D4AF37', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#FFFFFF' }}>{texts.restart}</button>
                                         <button onClick={goToSharePage} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#D4AF37' }}>{texts.share}</button>
                                     </div>

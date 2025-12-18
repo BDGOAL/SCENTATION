@@ -33,8 +33,8 @@
         button:active { opacity: 0.8; }
         button:focus { outline: none; }
         
-        /* 錯誤提示窗 */
-        #error-box { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: #ff5555; z-index: 99999; padding: 50px; font-size: 40px; white-space: pre-wrap; box-sizing: border-box; }
+        /* 錯誤訊息樣式 */
+        #error-box { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: #ff5555; z-index: 99999; padding: 40px; font-size: 30px; white-space: pre-wrap; box-sizing: border-box; overflow: auto; }
 
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -50,11 +50,11 @@
 </head>
 <body>
     <div id="error-box"></div>
-    <div id="loading">載入中...</div>
+    <div id="loading">載入中... / Loading...</div>
     <div id="root"></div>
 
     <script>
-        // 錯誤捕捉
+        // 錯誤捕捉器：如果發生黑畫面，這裡會顯示紅字錯誤
         window.onerror = function(msg, url, line, col, error) {
             document.getElementById('loading').style.display = 'none';
             const errorBox = document.getElementById('error-box');
@@ -64,26 +64,38 @@
     </script>
 
     <script type="text/babel">
-        setTimeout(() => {
-            const loader = document.getElementById('loading');
-            if(loader) loader.style.display = 'none';
-            // 手機版自動縮放
+        // ------------------------------------------------------------------
+        // ★★★ 設定區：修改這裡可以改變 QR Code 的網址 ★★★
+        // ------------------------------------------------------------------
+        const getBaseUrl = () => {
+            // 方法 A (預設): 自動抓取當前網址
+            return window.location.href.split('?')[0]; 
+            
+            // 方法 B (自訂): 如果您想指定固定網址，請刪除上面那行，改用下面這行：
+            // return 'https://BDGOAL.github.io/SCENTATION/index.html';
+        };
+        // ------------------------------------------------------------------
+
+        // 初始化螢幕縮放 (針對手機)
+        const initScale = () => {
             if (window.innerWidth < 2160) {
                 const scale = window.innerWidth / 2160;
                 const root = document.getElementById('root');
-                root.style.transform = `scale(${scale})`;
-                document.body.style.height = `${3840 * scale}px`;
-                document.body.style.overflowY = 'auto';
-                document.body.style.display = 'block';
+                if(root) {
+                    root.style.transform = `scale(${scale})`;
+                    document.body.style.height = `${3840 * scale}px`;
+                    document.body.style.overflowY = 'auto';
+                    document.body.style.display = 'block';
+                }
             }
-        }, 500);
+        };
+        // 延遲執行確保 DOM 載入
+        setTimeout(initScale, 100);
+        window.addEventListener('resize', initScale);
 
         const { useState, useCallback, useEffect, useRef } = React;
 
-        // ★★★ 請修改此處為您的實際網址 ★★★
-        const getBaseUrl = () => window.location.href.split('?')[0];
-
-        // 1. 圖片資源
+        // 圖片資源
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
         const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
@@ -113,7 +125,6 @@
             SP_Wandervogel: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_27%2087_Wandervogel_edp.jpg',
         };
 
-        // 2. 問題資料
         const zh_Questions = [
             { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、藝術家的抽象概念，以及它給予的無限聯想空間。' }, { key: 'S', text: '作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。' }], image: questionImages.q1, progressWidth: 366 },
             { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜，散發出專業、不被情緒影響的穩定氣場。' }, { key: 'F', text: '柔化周圍的氛圍,創造一個溫暖、撫慰的空間，幫助人與人建立連結。' }], image: questionImages.q2, progressWidth: 692 },
@@ -163,7 +174,7 @@
         };
 
         const en_Content = {
-            intro: { title: 'Unlock Your Scent Code', description: 'In the fast-paced urban rhythm, your scent defines your aura. Quickly analyze your core personality traits and receive precise recommendations for a luxury scent that highlights your unique charm.', button: 'Discover Your Unique Charm' },
+            intro: { title: 'Unlock Your Scent Code', description: 'In the fast-paced urban rhythm, your scent defines your aura.\nQuickly analyze your core personality traits and receive precise recommendations for a luxury scent that highlights your unique charm.', button: 'Discover Your Unique Charm' },
             nameInput: { title: 'Enter Your Name', subtitle: 'Let us tailor a scent experience just for you', placeholder: 'Your name', button: 'Start Now' },
             header: { tagline: 'The Philosophy of Taste:\nFinding your signature scent for your extraordinary style.' },
             exit: '✕', restart: 'Restart Quiz', share: 'Share With Friends',
@@ -217,6 +228,12 @@
             const [result, setResult] = useState(null);
             const [shareUrl, setShareUrl] = useState('');
             const [isShareMode, setIsShareMode] = useState(false);
+
+            // 重要：確保載入畫面消失
+            useEffect(() => {
+                const loader = document.getElementById('loading');
+                if(loader) loader.style.display = 'none';
+            }, []);
 
             const texts = translations[currentLang];
             const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -372,9 +389,9 @@
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
                                 </div>
                                 
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '640px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
+                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
+                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '723px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
                                 
                                 <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
 
@@ -386,7 +403,7 @@
                                 <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1269px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
                                     <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
-                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
+                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2152px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
                                 
                                 <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
                                 <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
@@ -449,15 +466,15 @@
                                 <div style={{ position: 'absolute', width: '1003px', left: 'calc(50% - 1003px/2)', top: '721px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF' }}>{result.mbtiType} - {result.resultData.category}</div>
                                 <div style={{ position: 'absolute', width: currentLang === 'en' ? '1488px' : '1188px', left: currentLang === 'en' ? 'calc(50% - 1488px/2)' : 'calc(50% - 1188px/2)', top: currentLang === 'en' ? '853px' : '933px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '46px' : '55px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{result.resultData.desc}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1160px' : '1240px', background: '#D4AF37', height: '115px', borderRadius: '25px 25px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '54px' : '64px', color: '#FFFFFF' }}>{texts.result.recommendation}</div>
+                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1160px' : '1180px', background: '#D4AF37', height: '115px', borderRadius: '25px 25px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '54px' : '64px', color: '#FFFFFF' }}>{texts.result.recommendation}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1211.9px', left: 'calc(50% - 1211.9px/2)', top: currentLang === 'en' ? '1380px' : '1440px', display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', zIndex: 10 }}>
+                                <div style={{ position: 'absolute', width: '1211.9px', left: 'calc(50% - 1211.9px/2)', top: '1380px', display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', zIndex: 10 }}>
                                     {result.resultData.fragrance.split(' / ').map((tag, i) => (
                                         <div key={i} style={{ padding: '19px 52px', height: '148px', background: '#D4AF37', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '70px', color: '#FFFFFF', boxSizing: 'border-box' }}>{tag.trim()}</div>
                                     ))}
                                 </div>
 
-                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1275px' : '1355px', boxSizing: 'border-box', border: '6px solid #D4AF37', borderRadius: '0 0 25px 25px' }}>
+                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1275px' : '1295px', boxSizing: 'border-box', border: '6px solid #D4AF37', borderRadius: '0 0 25px 25px' }}>
                                     <div style={{ padding: currentLang === 'en' ? '355px 70px 50px' : '335px 70px 50px', display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px' }}>
                                         {result.resultData.products.map((p, i) => (
                                             <div key={i} style={{ width: '482px', background: '#D4AF37', borderRadius: '25px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: currentLang === 'en' ? '35px' : '15px' }}>
@@ -473,7 +490,7 @@
                                 </div>
 
                                 {!isShareMode && (
-                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: '2960px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
+                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '3120px' : '2960px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
                                         <button onClick={restartQuiz} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#D4AF37', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#FFFFFF' }}>{texts.restart}</button>
                                         <button onClick={goToSharePage} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#D4AF37' }}>{texts.share}</button>
                                     </div>

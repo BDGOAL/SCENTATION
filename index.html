@@ -13,29 +13,29 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display&display=swap');
         
-        /* 基礎設定 */
+        * { box-sizing: border-box; }
+
+        /* 全局設定 */
         body, html {
             margin: 0; padding: 0;
             background-color: #1A1A1A;
             width: 100%; height: 100%;
             -webkit-user-select: none; user-select: none;
-            /* 預設隱藏捲軸 (Kiosk模式) */
-            overflow: hidden; 
+            overflow: hidden; /* 預設 Kiosk 模式隱藏捲軸 */
         }
 
-        /* 內容容器 */
+        /* 內容主容器 */
         #root { 
             width: 2160px; height: 3840px; 
             background-color: #1A1A1A;
-            /* 預設隱藏，由 JS 控制顯示，避免閃爍 */
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
+            opacity: 0; transition: opacity 0.3s ease-in;
         }
         
         button { cursor: pointer; transition: opacity 0.1s; }
         button:active { opacity: 0.8; }
         button:focus { outline: none; }
         
+        /* 載入與錯誤提示 */
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1A1A1A; color: #B8860B;
@@ -43,8 +43,6 @@
             font-size: 40px; font-family: 'Inter', sans-serif;
             z-index: 9999;
         }
-
-        /* 錯誤捕捉顯示器 (Debug) */
         #fatal-error {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); color: #ff5555; z-index: 100000;
@@ -58,24 +56,20 @@
     <div id="root"></div>
 
     <script>
-        // 全局錯誤攔截 (防止黑畫面完全無提示)
+        // 錯誤攔截器
         window.onerror = function(msg, url, line, col, error) {
             document.getElementById('loading').style.display = 'none';
             const errBox = document.getElementById('fatal-error');
             errBox.style.display = 'block';
-            errBox.innerHTML = "⚠️ System Error:\n" + msg + "\nLine: " + line;
+            errBox.innerHTML = "⚠️ Error:\n" + msg + "\nLine: " + line;
         };
     </script>
 
     <script type="text/babel">
         const { useState, useCallback, useEffect, useLayoutEffect, useRef } = React;
-        
-        // ★★★ 網址設定 ★★★
         const getBaseUrl = () => window.location.href.split('?')[0];
 
-        // ------------------------------------------------------------------
-        // ★★★ 穩健版排版引擎 (Robust Layout Engine) ★★★
-        // ------------------------------------------------------------------
+        // --- 核心排版引擎 ---
         const updateLayout = () => {
             const root = document.getElementById('root');
             const body = document.body;
@@ -85,60 +79,40 @@
             const screenH = window.innerHeight;
             const targetW = 2160;
             const targetH = 3840;
-
-            // 判斷是否為手機 (寬度小於 1000px)
             const isMobile = screenW < 1000;
 
             if (isMobile) {
-                // === 手機模式 ===
-                // 1. 開啟捲軸
+                // 手機模式：允許捲動，靠左上對齊
                 body.style.overflowY = 'auto';
                 body.style.overflowX = 'hidden';
-                
-                // 2. 計算縮放 (以寬度為基準填滿)
                 const scale = screenW / targetW;
-                
-                // 3. 設定樣式 (靠左上)
                 root.style.position = 'absolute';
                 root.style.left = '0px';
                 root.style.top = '0px';
                 root.style.transformOrigin = 'top left';
                 root.style.transform = `scale(${scale})`;
-                
-                // 4. 設定高度 (確保能滑到底)
                 body.style.height = `${targetH * scale}px`;
-
             } else {
-                // === Kiosk 模式 ===
-                // 1. 隱藏捲軸
+                // Kiosk 模式：禁止捲動，絕對置中
                 body.style.overflow = 'hidden';
                 body.style.height = '100%';
-
-                // 2. 計算縮放 (保持比例置中)
                 const scale = Math.min(screenW / targetW, screenH / targetH);
-                
-                // 3. 設定樣式 (絕對置中)
                 root.style.position = 'absolute';
                 root.style.left = '50%';
                 root.style.top = '50%';
                 root.style.transformOrigin = 'center center';
                 root.style.transform = `translate(-50%, -50%) scale(${scale})`;
             }
-
-            // 顯示畫面
             root.style.opacity = 1;
             const loader = document.getElementById('loading');
             if(loader) loader.style.display = 'none';
         };
 
-        // 綁定排版事件
         window.addEventListener('load', updateLayout);
         window.addEventListener('resize', updateLayout);
-        setTimeout(updateLayout, 200); // 確保 DOM 載入後執行
+        setTimeout(updateLayout, 200);
 
-        // ------------------------------------------------------------------
-        // 資料與組件
-        // ------------------------------------------------------------------
+        // --- 資料設定 ---
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
         const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
@@ -213,34 +187,58 @@
                     { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, notes: '', description: '喜歡說走就走、同時對新科技與新體驗保持高度興趣的人，會被 Wandervogel 帶紫蘇與海風感的前衛清新調吸引。這款香氣不走傳統乖巧路線，而是帶著一點未來感與實驗氣質，正好用來表達你不願被框限的一面。' }
                 ]}
             },
+            questions: zh_Questions
+        };
+
+        const en_Content = {
+            intro: { title: 'Unlock Your Scent Code', description: 'In the fast-paced urban rhythm, your scent defines your aura.\nQuickly analyze your core personality traits and receive precise recommendations for a luxury scent that highlights your unique charm.', button: 'Discover Your Unique Charm' },
+            nameInput: { title: 'Enter Your Name', subtitle: 'Let us tailor a scent experience just for you', placeholder: 'Your name', button: 'Start Now' },
+            header: { tagline: 'The Philosophy of Taste:\nFinding your signature scent for your extraordinary style.' },
+            exit: '✕', restart: 'Restart Quiz', share: 'Share With Friends',
+            result: { title: 'Your Exclusive Fragrance:', greeting: 'Dear [NAME],', mbtiPrefix: ' ', mbtiSuffix: '', recommendation: 'Your SCENTATION Recommended Scent:', recommendationLabel: 'Recommended fragrances:' },
+            shareQR: { title: 'Share Your Scent Persona', subtitle: 'Scan the QR Code to get a sharable result image', instruction: 'Scan the QR Code with your phone\nto save and share your result on social media.', backButton: 'Back to Result Page' },
+            resultsMap: {
+                NT: { category: 'I. The Analysts', desc: 'As a logic-driven analyst pursuing efficiency and complexity,\nyou dislike mediocrity. You favor scents that provoke thought\nor carry a sense of mystery. Your fragrance must demonstrate\nunique taste and intelligence.', fragrance: 'Woody / Chypre / Aromatic', products: [
+                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, notes: '', description: 'If you enjoy organizing complex situations into clear, actionable plans, Aventus\' smoky pineapple combined with a dry woody structure amplifies your "well-planned and ambitious" side. What others smell is not just a pleasant fruity fragrance, but a person who knows how to control the rhythm and lead the situation.' },
+                    { brand: 'Creed', name: 'Silver Mountain Water', image: productImages.NT_SilverMountainWater, notes: '', description: 'If you prefer to maintain appropriate distance and perspective in interactions, this metallic cold tea scent makes you appear calmer, cleaner, and smarter—as if always standing at a slightly elevated position overlooking the chess board rather than being pushed by emotions.' },
+                    { brand: 'Narciso Rodriguez', name: 'For Him Bleu Noir', image: productImages.NT_ForHimBleuNoir, notes: '', description: 'If you\'re not naturally talkative, Bleu Noir\'s dark woody musk makes your silence "deep" rather than "lacking presence." People will find you difficult to read but simultaneously stable and restrained—like someone who doesn\'t act rashly but is worth listening to carefully when they do speak.' }
+                ] },
+                SJ: { category: 'III. The Sentinels', desc: 'As a pragmatic, reliable, and rule-following Sentinel, you favor clear, dependable, and not overly ostentatious "safe" scents. Your fragrance must pass perfectly, bringing a sense of security and professionalism.', fragrance: 'Fougere / Clean Musk / Citrus', products: [
+                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, notes: '', description: 'If you want to appear steady, clean, and reliable, For Her EDT\'s skin-like musk is understated but impossible to ignore. Perfect for daily commutes or family gatherings, it subconsciously links you to keywords like "meticulous, considerate, and trustworthy."' },
+                    { brand: 'Acqua di Parma', name: 'Buongiorno', image: productImages.SJ_Buongiorno, notes: '', description: 'If you like an organized start to your day, Buongiorno\'s herbal citrus scent is like a "start switch." It adds a layer of fresh orderliness to your presence without being loud—ideal for focused work mornings.' },
+                    { brand: 'Xerjoff', name: 'Torino 23', image: productImages.SJ_Torino23, notes: '', description: 'If you value manners and rhythm, Torino 23 smells like that fresh-showered moment after sports. Its white floral and woody base creates a "serious but not rigid" vibe, keeping you poised across formal and casual settings.' }
+                ] },
+                NF: { category: 'II. The Diplomats', desc: 'As an emotionally rich diplomat who values interpersonal connection,\nyou need warm, profound, and narrative scents.\nYour fragrance will seek emotional support\nor exude approachable charm in social settings.', fragrance: 'Oriental / Floral / Gourmand', products: [
+                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, notes: '', description: 'If emotional warmth matters to you, Ani\'s vanilla isn\'t just sweet—it\'s layered with spice and woods like a tightening hug. Use it to build safety and trust, encouraging others to open up to you.' },
+                    { brand: 'Nishane', name: 'Nanshe', image: productImages.NF_Nanshe, notes: '', description: 'If you often become the person in your friends\' eyes who "understands and listens to the heart," Nanshe\'s powdery rose and soapy scent adds a layer of soft and stable aura to you.' },
+                    { brand: 'Casamorati (Xerjoff)', name: 'Lira', image: productImages.NF_Lira, notes: '', description: 'If you want your first impression to be "easy to get along with, with a touch of sweetness," Lira\'s gourmand scent, like a lemon pound cake, makes you feel like inviting others to sit down and share a freshly baked dessert.' },
+                    { brand: 'BLACK FADES', name: 'Zik (夕)', image: productImages.NF_Zik, notes: '', description: '"Zik" (夕) refers to the time after dusk when the world gradually quiets down, leaving only yourself in dialogue with your inner self. The opening bitter lemon, lime, and cypress bring a cool freshness. Then, pine, moss, vetiver, hinoki, sandalwood, and cedar create a woody and amber-infused space, like walking into a warmly lit small room after dusk.' }
+                ] },
+                SP: { category: 'IV. The Explorers', desc: 'As an Explorer who lives in the moment and loves freedom and excitement,\nyou need vibrant, dynamic, or strongly individualistic scents.\nYour fragrance should reflect a fast-paced life\nand an extroverted personality.', fragrance: 'Leather / Spicy / Aquatic', products: [
+                    { brand: 'LM Parfums', name: 'Hard Leather', image: productImages.SP_HardLeather, notes: '', description: 'If you play big, Hard Leather\'s animalic oud makes you impossible to ignore. It doesn\'t aim to please everyone but keeps your bold attitude front and center—perfect for parties or making a strong impression.' },
+                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, notes: '', description: 'If you love "dark" or "experimental" vibes, Black Afgano\'s heavy resin and smoke creates a dangerous allure. It smells like an unconventional journey, ideal for challenging norms or maintaining mystery.' },
+                    { brand: 'Creed', name: 'Virgin Island Water', image: productImages.SP_VirginIslandWater, notes: '', description: 'If travel energizes you, this is a Piña Colada in a bottle. Lime, coconut, and rum create a "walking vacation" vibe, perfect for summer, festivals, or whenever you want to have fun.' },
+                    { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, notes: '', description: 'If you love spontaneity and new tech, Wandervogel\'s avant-garde shiso and sea breeze scent makes you look like you\'re seeking the next destination. It\'s futuristic and experimental, just like you.' }
+                ] },
+            },
             questions: en_Questions
         };
 
         const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
 
-        // ★★★ 強健的 QR Code 組件 (防止崩潰) ★★★
         const QRCodeComp = ({ value, size }) => {
             const qrRef = useRef(null);
             useEffect(() => {
-                // 加入延遲與錯誤捕捉
                 const timer = setTimeout(() => {
                     if (qrRef.current && window.QRCode && value) {
                         try {
                             qrRef.current.innerHTML = "";
-                            new QRCode(qrRef.current, { 
-                                text: value, 
-                                width: size, 
-                                height: size, 
-                                colorDark: "#000000", 
-                                colorLight: "#ffffff", 
-                                correctLevel: QRCode.CorrectLevel.H 
-                            });
+                            new QRCode(qrRef.current, { text: value, width: size, height: size, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
                         } catch (e) {
-                            console.error("QR Code Error:", e);
-                            qrRef.current.innerHTML = "QR Code Load Error";
+                            console.error(e);
                         }
                     }
-                }, 100); // 延遲 100ms 確保 DOM 準備好
+                }, 100);
                 return () => clearTimeout(timer);
             }, [value, size]);
             return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
@@ -255,53 +253,51 @@
             const [shareUrl, setShareUrl] = useState('');
             const [isShareMode, setIsShareMode] = useState(false);
 
-            // 強制觸發排版計算 (確保畫面不會黑掉)
             useEffect(() => { setTimeout(updateLayout, 300); }, []);
 
             const texts = translations[currentLang];
             const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
             useEffect(() => {
-                const params = new URLSearchParams(window.location.search);
-                const mode = params.get('mode');
-                
-                if (mode === 'share') {
-                    setIsShareMode(true);
-                    const name = params.get('name') || '';
-                    const type = params.get('type') || 'NT';
-                    const p1 = parseInt(params.get('p1') || '0');
-                    const p2 = parseInt(params.get('p2') || '1');
-                    const lang = params.get('lang') || 'zh-TW';
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const mode = params.get('mode');
+                    
+                    if (mode === 'share') {
+                        setIsShareMode(true);
+                        const name = params.get('name') || '';
+                        const type = params.get('type') || 'NT';
+                        const p1 = parseInt(params.get('p1') || '0');
+                        const p2 = parseInt(params.get('p2') || '1');
+                        const lang = params.get('lang') || 'zh-TW';
 
-                    // 設定語言
-                    if (lang === 'en' || lang === 'zh-TW') {
-                        setCurrentLang(lang);
+                        if (lang === 'en' || lang === 'zh-TW') setCurrentLang(lang);
+                        
+                        let categoryKey = 'NT';
+                        if(type.includes('N') && type.includes('T')) categoryKey='NT';
+                        else if(type.includes('N') && type.includes('F')) categoryKey='NF';
+                        else if(type.includes('S') && type.includes('J')) categoryKey='SJ';
+                        else if(type.includes('S') && type.includes('P')) categoryKey='SP';
+
+                        const targetContent = (lang === 'en') ? en_Content : zh_TW_Content;
+                        const originalResultData = targetContent.resultsMap[categoryKey];
+                        
+                        if (originalResultData) {
+                            const prod1 = originalResultData.products[p1] || originalResultData.products[0];
+                            const prod2 = originalResultData.products[p2] || originalResultData.products[1];
+                            setPlayerName(name);
+                            setResult({ mbtiType: type, resultData: { ...originalResultData, products: [prod1, prod2] } });
+                            setCurrentPage('result');
+                        }
+                    } else {
+                        let timer;
+                        const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
+                        ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'].forEach(e => window.addEventListener(e, reset));
+                        reset();
+                        return () => { clearTimeout(timer); };
                     }
-                    
-                    let categoryKey = 'NT';
-                    if(type.includes('N') && type.includes('T')) categoryKey='NT';
-                    else if(type.includes('N') && type.includes('F')) categoryKey='NF';
-                    else if(type.includes('S') && type.includes('J')) categoryKey='SJ';
-                    else if(type.includes('S') && type.includes('P')) categoryKey='SP';
-
-                    // 使用正確語言的資料
-                    const targetContent = (lang === 'en') ? en_Content : zh_TW_Content;
-                    const originalResultData = targetContent.resultsMap[categoryKey];
-                    
-                    const prod1 = originalResultData.products[p1] || originalResultData.products[0];
-                    const prod2 = originalResultData.products[p2] || originalResultData.products[1];
-                    const selectedProducts = [prod1, prod2];
-
-                    setPlayerName(name);
-                    setResult({ mbtiType: type, resultData: { ...originalResultData, products: selectedProducts } });
-                    setCurrentPage('result');
-                } else {
-                    let timer;
-                    const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
-                    const events = ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'];
-                    events.forEach(e => window.addEventListener(e, reset));
-                    reset();
-                    return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
+                } catch(e) {
+                    console.error("Init Error", e);
                 }
             }, []);
 
@@ -420,23 +416,17 @@
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '6px solid #B8860B' }}></div>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
                                 </div>
-                                
                                 <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
-                                
                                 <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
-                                
-                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
-
+                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '940px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
                                 <div style={{ position: 'absolute', width: '1331px', height: '38px', left: 'calc(50% - 1331px/2 + 0.5px)', top: currentLang === 'en' ? '1160px' : '1040px' }}>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '12px solid #B8860B' }}></div>
                                     <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '6px solid #B8860B' }}></div>
                                 </div>
-
                                 <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1300px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
                                     <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                                 <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
-                                
                                 <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
                                 <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
                             </>
@@ -490,44 +480,76 @@
                             </div>
                         ))}
 
+                        {/* ================================================================================== */}
+                        {/* 🌟 核心修正：Result Page 使用 Flexbox 流動排版，徹底解決重疊與黑畫面問題 🌟 */}
+                        {/* ================================================================================== */}
                         {currentPage === 'result' && result && (
-                            <>
-                                <div style={{ position: 'absolute', width: '1003px', left: 'calc(50% - 1003px/2)', top: '366px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF' }}>{texts.result.greeting.replace('[姓名]', playerName).replace('[NAME]', playerName)}</div>
-                                <div style={{ position: 'absolute', width: '1182px', left: 'calc(50% - 1182px/2)', top: '471px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '88px' : '105px', textAlign: 'center', color: '#D4AF37' }}>{texts.result.title}</div>
-                                <div style={{ position: 'absolute', width: '779px', height: '0', left: 'calc(50% - 779px/2)', top: '626px', border: '6px solid #D4AF37' }}></div>
-                                <div style={{ position: 'absolute', width: '1003px', left: 'calc(50% - 1003px/2)', top: '721px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF' }}>{result.mbtiType} - {result.resultData.category}</div>
-                                <div style={{ position: 'absolute', width: currentLang === 'en' ? '1488px' : '1188px', left: currentLang === 'en' ? 'calc(50% - 1488px/2)' : 'calc(50% - 1188px/2)', top: currentLang === 'en' ? '853px' : '933px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '46px' : '55px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{result.resultData.desc}</div>
+                            <div style={{ 
+                                position: 'absolute', width: '100%', height: '100%', 
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                                paddingTop: '366px' /* 保留頂部空間給標題 */
+                            }}>
+                                {/* 1. 問候語 & 標題 (固定位置) */}
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>{texts.result.greeting.replace('[姓名]', playerName).replace('[NAME]', playerName)}</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '88px' : '105px', textAlign: 'center', color: '#D4AF37', marginBottom: '20px' }}>{texts.result.title}</div>
+                                <div style={{ width: '779px', height: '0', border: '6px solid #D4AF37', marginBottom: '40px' }}></div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF', marginBottom: '40px' }}>{result.mbtiType} - {result.resultData.category}</div>
                                 
-                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1160px' : '1240px', background: '#D4AF37', height: '115px', borderRadius: '25px 25px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '54px' : '64px', color: '#FFFFFF' }}>{texts.result.recommendation}</div>
-                                
-                                <div style={{ position: 'absolute', width: '1211.9px', left: 'calc(50% - 1211.9px/2)', top: '1380px', display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', zIndex: 10 }}>
-                                    {result.resultData.fragrance.split(' / ').map((tag, i) => (
-                                        <div key={i} style={{ padding: '19px 52px', height: '148px', background: '#D4AF37', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '70px', color: '#FFFFFF', boxSizing: 'border-box' }}>{tag.trim()}</div>
-                                    ))}
+                                {/* 2. 描述文字 (自動高度) */}
+                                <div style={{ 
+                                    width: currentLang === 'en' ? '1488px' : '1188px', 
+                                    fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '46px' : '55px', 
+                                    textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap', wordWrap: 'break-word',
+                                    marginBottom: '60px' /* 與下方黃色標題的間距 */
+                                }}>
+                                    {result.resultData.desc}
                                 </div>
+                                
+                                {/* 3. 黃色推薦標題 */}
+                                <div style={{ 
+                                    width: '1412px', height: '115px', background: '#D4AF37', borderRadius: '25px 25px 0 0', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '54px' : '64px', color: '#FFFFFF',
+                                    flexShrink: 0
+                                }}>
+                                    {texts.result.recommendation}
+                                </div>
+                                
+                                {/* 4. 產品容器 (包住 Tag 和 卡片) */}
+                                <div style={{ 
+                                    width: '1412px', boxSizing: 'border-box', border: '6px solid #D4AF37', borderRadius: '0 0 25px 25px',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 70px'
+                                }}>
+                                    {/* 香調 Tags */}
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px' }}>
+                                        {result.resultData.fragrance.split(' / ').map((tag, i) => (
+                                            <div key={i} style={{ padding: '19px 52px', height: '148px', background: '#D4AF37', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '70px', color: '#FFFFFF', boxSizing: 'border-box' }}>{tag.trim()}</div>
+                                        ))}
+                                    </div>
 
-                                <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '1275px' : '1355px', boxSizing: 'border-box', border: '6px solid #D4AF37', borderRadius: '0 0 25px 25px' }}>
-                                    <div style={{ padding: currentLang === 'en' ? '355px 70px 50px' : '335px 70px 50px', display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px' }}>
+                                    {/* 產品卡片 Row */}
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%' }}>
                                         {result.resultData.products.map((p, i) => (
-                                            <div key={i} style={{ width: '482px', background: '#D4AF37', borderRadius: '25px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: currentLang === 'en' ? '35px' : '15px' }}>
+                                            <div key={i} style={{ width: '482px', background: '#D4AF37', borderRadius: '25px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                                 <div style={{ width: '458px', height: '458px', borderRadius: '25px', overflow: 'hidden', display:'flex', alignItems:'center', justifyContent:'center', background:'#FFF', marginBottom: '20px', flexShrink: 0 }}>
                                                     <img src={p.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '40px' : '45px', color: '#FFFFFF', marginTop: '10px', textAlign: 'center', flexShrink: 0 }}>{p.brand}</div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '48px' : '55px', color: '#FFFFFF', margin: '10px 0', textAlign: 'center', flexShrink: 0 }}>{p.name}</div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '36px' : '40px', lineHeight: '1.2', color: '#FFFFFF', padding: '20px 0', textAlign: 'center', whiteSpace: 'pre-wrap', wordWrap: 'break-word', flex: 1, display: 'flex', alignItems: 'center' }}>{p.description}</div>
+                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '40px' : '45px', color: '#FFFFFF', marginTop: '10px', textAlign: 'center' }}>{p.brand}</div>
+                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '48px' : '55px', color: '#FFFFFF', margin: '10px 0', textAlign: 'center' }}>{p.name}</div>
+                                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '36px' : '40px', lineHeight: '1.2', color: '#FFFFFF', padding: '20px 0', textAlign: 'center', whiteSpace: 'pre-wrap', wordWrap: 'break-word', flex: 1 }}>{p.description}</div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
+                                {/* 5. 底部按鈕 (自動流動，與上方保持間距) */}
                                 {!isShareMode && (
-                                    <div style={{ position: 'absolute', width: '1412px', left: 'calc(50% - 1412px/2)', top: currentLang === 'en' ? '3120px' : '3120px', display: 'flex', justifyContent: 'center', gap: '50px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '50px', marginBottom: '100px' }}>
                                         <button onClick={restartQuiz} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#D4AF37', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#FFFFFF' }}>{texts.restart}</button>
                                         <button onClick={goToSharePage} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#D4AF37' }}>{texts.share}</button>
                                     </div>
                                 )}
-                            </>
+                            </div>
                         )}
 
                         {currentPage === 'share' && (

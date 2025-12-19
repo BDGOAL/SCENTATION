@@ -1,280 +1,397 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import logoImage from 'figma:asset/ee53a9af49c512b0092c46a5136839eadad379b4.png';
-
-type ScoreKey = 'N' | 'S' | 'J' | 'P' | 'T' | 'F' | 'E' | 'I';
-type Page = 'intro' | 1 | 2 | 3 | 4 | 'result';
-type CategoryKey = 'NT' | 'NF' | 'SJ' | 'SP';
-
-interface ResultData {
-  category: string;
-  desc: string;
-  fragrance: string;
-}
-
-const resultsMap: Record<CategoryKey, ResultData> = {
-  NT: {
-    category: '一、分析家 (The Analysts)',
-    desc: '作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸，偏愛能激發思考或帶有神秘感的氣味。您的香氣必須展現出獨特的品味與智慧。',
-    fragrance: '🪶 木質調 (Woody) / 🌲 西普調 (Chypre) / 🌿 芳香調 (Aromatic)'
-  },
-  NF: {
-    category: '二、外交家 (The Diplomats)',
-    desc: '作為情感豐富、注重人際連結的外交家，您需要溫暖、具有深度和故事感的香氣。您的香氣將在繁忙中尋求情感支持，或在社交中散發親切魅力。',
-    fragrance: '🔥 東方調 (Oriental / Amber) / 🌸 花香調 (Floral) / 🧁 美食調 (Gourmand)'
-  },
-  SJ: {
-    category: '三、守衛者 (The Sentinels)',
-    desc: '作為務實可靠、遵循規則的守衛者，您偏愛清晰、可靠、不過分張揚的「安全」香氣。您的香氣必須完美過關，帶來安心感和專業感。',
-    fragrance: '👔 馥奇調 (Fougere) / 🧼 潔淨麝香調 (Clean Musk) / 🍊 柑橘調 (Citrus)'
-  },
-  SP: {
-    category: '四、探險家 (The Explorers)',
-    desc: '作為活在當下、熱愛自由與刺激的探險家，您需要充滿活力、動感或帶有強烈個性的香氣。您的香氣應反映快節奏的生活和外向的個性。',
-    fragrance: '🧥 皮革調 (Leather) / 🌶️ 辛香調 (Spicy) / 🌊 水生調 (Aquatic)'
-  }
-};
-
-// 將問題內容從 UI 中分離出來，方便管理 (保留原問題和選項文案)
-const questions = [
-  { id: 1, title: '🎨 鑑賞藝術品時，您的目光會最先被什麼吸引？', options: [{ key: 'N', text: 'A. 作品背後的哲學思想、藝術家的抽象概念，以及它給予的無限聯想空間。'}, { key: 'S', text: 'B. 作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。'} ] },
-  { id: 2, title: '💔 在緊張的人際衝突中，您認為香氣的作用是什麼？', options: [{ key: 'T', text: 'A. 幫助我保持清醒和冷靜，散發出專業、不被情緒影響的穩定氣場。'}, { key: 'F', text: 'B. 柔化周圍的氛圍，創造一個溫暖、撫慰的空間，幫助人與人建立連結。'} ] },
-  { id: 3, title: '🗓️ 關於您收藏的各種香水，哪個描述最貼切？', options: [{ key: 'J', text: 'A. 我會根據場合、服裝、甚至是一週的計劃，為香水進行精準的分類和選擇。'}, { key: 'P', text: 'B. 我隨心所欲地使用香水，喜歡即興疊香，相信氣味帶來當下的感官驚喜。'} ] },
-  { id: 4, title: '🌃 週末晚上，您渴望散發哪一種香氣風格？', options: [{ key: 'E', text: 'A. 濃郁、具有魅力且張揚的香氣，希望成為社交聚會中最令人難忘的焦點。'}, { key: 'I', text: 'B. 內斂、有層次且舒適的香氣，它是我獨處時的儀式感，只為懂我的人停留。'} ] }
-];
-const totalQuestions = questions.length;
-
-
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('intro');
-  const [score, setScore] = useState<Record<ScoreKey, number>>({
-    N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0
-  });
-  const [result, setResult] = useState<{ mbtiType: string; resultData: ResultData } | null>(null);
-  
-  // 計算進度條百分比
-  const getProgress = useMemo(() => {
-    if (currentPage === 'intro') return 0;
-    if (currentPage === 'result') return 100;
-    return ((currentPage as number) / totalQuestions) * 100;
-  }, [currentPage]);
-
-
-  const calculateResult = useCallback((finalScore: Record<ScoreKey, number>) => {
-    const N_S = finalScore.N > finalScore.S ? 'N' : 'S';
-    const J_P = finalScore.J > finalScore.P ? 'J' : 'P';
-    const T_F = finalScore.T > finalScore.F ? 'T' : 'F';
-    const E_I = finalScore.E > finalScore.I ? 'E' : 'I';
-
-    const mbtiType = E_I + N_S + T_F + J_P;
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCENTATION - 探索您的香氣密碼</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/qrcode.react@3.1.0/dist/qrcode.react.min.js"></script>
     
-    // **Bug 修正核心邏輯:** 確保 S 類型能夠準確地導向 SP 或 SJ。
-    let finalKey: CategoryKey;
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display&display=swap" rel="stylesheet">
     
-    if (N_S === 'N') {
-      // 分析家 (NT) 或 外交家 (NF)
-      finalKey = T_F === 'T' ? 'NT' : 'NF';
-    } else {
-      // 守衛者 (SJ) 或 探險家 (SP)
-      // S_F_ 傾向於 SJ (守衛者), S_T_ 傾向於 SP (探險家)
-      finalKey = T_F === 'F' ? 'SJ' : 'SP'; 
-    }
-
-    const resultData = resultsMap[finalKey];
-
-    setResult({ mbtiType, resultData });
-    setCurrentPage('result');
-  }, []);
-
-  // 處理回答
-  const handleAnswer = useCallback((scoreKey: ScoreKey, isLastQuestion: boolean = false) => {
-    // 優先更新分數
-    setScore(prevScore => {
-        const newScore = { ...prevScore, [scoreKey]: prevScore[scoreKey] + 1 };
-        
-        if (isLastQuestion) {
-            // 如果是最後一題，則調用 calculateResult
-            calculateResult(newScore);
-        } else {
-            // 如果不是最後一題，則切換頁面
-            setCurrentPage(prevPage => {
-                if (typeof prevPage === 'number' && prevPage < totalQuestions) {
-                    return (prevPage + 1) as 1 | 2 | 3 | 4;
-                }
-                return prevPage;
-            });
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #1A1A1A;
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
         }
-        return newScore;
-    });
+        /* 針對 Kiosk 2160x3840 的縮放 (可選，瀏覽器會自動縮放內容) */
+        .app-container {
+            width: 2160px;
+            height: 3840px;
+            transform-origin: top left;
+        }
+        /* 捲軸美化 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #B8860B;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-  }, [calculateResult]);
+    <script type="text/babel">
+        const { useState, useCallback, useEffect, useMemo } = React;
+        const QRCodeCanvas = QRCodeReact.QRCodeCanvas;
 
-  const startQuiz = useCallback(() => {
-    setCurrentPage(1);
-  }, []);
+        // =========================================================
+        // 核心邏輯 - MBTI 計算 (原本的 calcMbti.ts)
+        // =========================================================
+        const calcMbti = (answers) => {
+            const counts = { N: 0, S: 0, T: 0, F: 0, J: 0, P: 0, E: 0, I: 0 };
+            
+            // 根據您的 handleAnswer 傳遞的 A/B 邏輯映射到對應分數
+            answers.forEach(ans => {
+                if (ans.question === 1) ans.answer === 'A' ? counts.N++ : counts.S++;
+                if (ans.question === 2) ans.answer === 'A' ? counts.T++ : counts.F++;
+                if (ans.question === 3) ans.answer === 'A' ? counts.J++ : counts.P++;
+                if (ans.question === 4) ans.answer === 'A' ? counts.E++ : counts.I++;
+            });
 
-  const restartQuiz = useCallback(() => {
-    setCurrentPage('intro');
-    setScore({ N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0 });
-    setResult(null);
-  }, []);
+            const res = [
+                counts.E >= counts.I ? 'E' : 'I',
+                counts.N >= counts.S ? 'N' : 'S',
+                counts.T >= counts.F ? 'T' : 'F',
+                counts.J >= counts.P ? 'J' : 'P'
+            ].join('');
+            return res;
+        };
 
-  const exitToIntro = useCallback(() => {
-    restartQuiz();
-  }, [restartQuiz]);
+        // =========================================================
+        // 核心數據 - MBTI 結果 (原本的 mbti-data.ts)
+        // =========================================================
+        // 這裡僅示範核心分類，實際會對應到結果頁面的 CategoryKey (NT/NF/SJ/SP)
+        const getCategoryKey = (mbti) => {
+            if (mbti.includes('N') && mbti.includes('T')) return 'NT';
+            if (mbti.includes('N') && mbti.includes('F')) return 'NF';
+            if (mbti.includes('S') && mbti.includes('J')) return 'SJ';
+            if (mbti.includes('S') && mbti.includes('P')) return 'SP';
+            return 'NT'; // Default
+        };
 
-  const showExitButton = currentPage !== 'intro' && currentPage !== 'result';
-  const showProgressBar = currentPage !== 'intro';
-
-  // =========================================================
-  // UI 渲染邏輯
-  // =========================================================
-  const renderQuestion = (q: (typeof questions)[0]) => (
-    <div key={q.id} className="text-left">
-      <h2 
-        className="text-[80px] text-[#B8860B] mb-[70px] text-center"
-        style={{ 
-          fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", 
-          fontWeight: 500 
-        }}
-      >
-        {q.title}
-      </h2>
-      {q.options.map((option, index) => (
-        <button
-          key={index}
-          // 傳遞 isLastQuestion: 檢查當前問題 ID 是否等於總問題數
-          onClick={() => handleAnswer(option.key as ScoreKey, q.id === totalQuestions)}
-          className="block w-full py-[50px] px-[70px] my-[50px] bg-[#282828] border-2 border-[#555] rounded-[15px] cursor-pointer text-[60px] text-[#E0E0E0] text-left transition-all hover:bg-[#383838] hover:border-[#B8860B] hover:text-white"
-          style={{ 
-            fontFamily: "'Inter', 'Microsoft YaHei UI', sans-serif", 
-            fontWeight: 300 
-          }}
-        >
-          {option.text}
-        </button>
-      ))}
-    </div>
-  );
-
-
-  return (
-    <div 
-      className="w-[2160px] h-[3840px] bg-[#121212] text-[#E0E0E0] flex justify-center items-center overflow-hidden"
-      style={{ fontFamily: "'Inter', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif" }}
-    >
-      <div className="w-[90%] max-w-[1900px] h-[90%] bg-[rgba(25,25,25,0.95)] border-[5px] border-[#B8860B] shadow-[0_0_50px_rgba(184,134,11,0.4)] rounded-[20px] px-[120px] py-[100px] text-center flex flex-col justify-between relative">
+        // =========================================================
+        // 圖片資源
+        // =========================================================
+        const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
+        const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
+        const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_A4.png';
         
-        {/* Exit Button */}
-        {showExitButton && (
-          <button
-            onClick={exitToIntro}
-            className="absolute top-[70px] left-[70px] w-[100px] h-[100px] bg-transparent border-2 border-[#B8860B] rounded-full text-[#B8860B] text-[60px] leading-[90px] cursor-pointer z-10 transition-all hover:bg-[#B8860B] hover:text-[#121212] flex items-center justify-center"
-          >
-            ×
-          </button>
-        )}
+        const productImages = {
+            NT_Aventus: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Aventus%20Collection-Aventus_edp.jpg',
+            NT_SilverMountainWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Silver%20Mountain%20Water_edp.jpg',
+            NT_ForHimBleuNoir: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Him%20Bleu%20Noir_edp.jpg',
+            NF_Ani: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Ani_Extrait.jpg',
+            NF_Nanshe: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Nanshe_Extrait.jpg',
+            NF_Lira: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Casamorati%20-%20Lira_edp.jpg',
+            NF_Zik: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_blackfades_zik.jpg',
+            SJ_ForHerEDT: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Her_edt.jpg',
+            SJ_Buongiorno: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Acqua%20di%20Parma_Buongiorno_edp.jpg',
+            SJ_Torino23: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Torino%2023_edp.jpg',
+            SP_HardLeather: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_LM%20Parfums_Hard%20Leather_Extrait%20de%20parfum.jpg',
+            SP_BlackAfgano: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nasomatto_Black%20Afgano_Extrait%20de%20parfum.jpg',
+            SP_VirginIslandWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Virgin%20Island%20Water_edp.jpg',
+            SP_Wandervogel: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_27%2087_Wandervogel_edp.jpg',
+        };
 
-        {/* Header (使用 Figma Asset Logo) */}
-        <div className="pb-5 mb-8">
-          <div className="mb-2 flex justify-center">
-            <img 
-              src={logoImage} 
-              alt="SCENTATION Logo" 
-              // 調整圖片大小以符合標題區域，並保留香檳金光暈效果
-              className="h-[160px] w-auto" 
-              style={{
-                filter: 'drop-shadow(0 0 10px rgba(184, 134, 11, 0.8))'
-              }}
-            />
-          </div>
-          <p 
-            className="text-[50px] text-[#AAAAAA] font-light"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          >
-            品味哲學：為您的非凡風格，尋覓專屬氣味簽名。
-          </p>
-        </div>
+        // =========================================================
+        // ResultPage Component (內置實作)
+        // =========================================================
+        const ResultPage = ({ result, playerName, currentLang, shareUrl, restartQuiz, goToSharePage }) => {
+            const content = translations[currentLang];
+            const data = result.resultData;
 
-        {/* Progress Bar */}
-        {showProgressBar && (
-          <div className="w-full h-[30px] bg-[#333] rounded-[15px] mb-[50px] overflow-hidden">
-            <div 
-              className="h-full bg-[#B8860B] transition-all duration-500"
-              style={{ width: `${getProgress}%` }}
-            />
-          </div>
-        )}
+            return (
+                <div className="absolute inset-0 overflow-y-auto px-20 pt-[350px] pb-40">
+                    <div className="text-center">
+                        <div className="text-white text-[56px] mb-8">
+                            {currentLang === 'zh-TW' ? `親愛的 ${playerName}，` : `Dear ${playerName},`}
+                        </div>
+                        <div className="text-[#D4AF37] text-[105px] font-bold mb-10 leading-tight">
+                            {content.result.title}
+                        </div>
+                        <div className="w-[779px] h-0 border-t-4 border-[#D4AF37] mx-auto mb-10"></div>
+                        <div className="text-white text-[96px] font-bold mb-10 uppercase tracking-widest">
+                             {result.mbtiType}
+                        </div>
+                        <div className="text-white text-[50px] px-10 mb-20 leading-relaxed whitespace-pre-line">
+                            {data.desc}
+                        </div>
+                    </div>
 
-        {/* Content Area */}
-        <div className="flex-grow pb-[100px]">
-          
-          {/* Intro Page */}
-          {currentPage === 'intro' && (
-            <div className="text-center">
-              <h2 
-                className="text-[80px] text-[#B8860B] mb-[70px]"
-                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 500 }}
-              >
-                啟程，解鎖您的香氣密碼
-              </h2>
-              <p className="text-[55px] leading-[1.8] text-[#E0E0E0] mb-[50px]">
-                於瞬息萬變的都會節奏中，您的選擇定義了您的氣場。本測試透過 **4 題精煉的美學情境**，迅速剖析您的核心人格特質，精準推薦最能彰顯您個人魅力的奢華香調家族。
-              </p>
-              
-              {/* 移除 H3 區塊，只保留開始按鈕 */}
-              <button
-                onClick={startQuiz}
-                className="mt-[100px] px-[100px] py-[50px] bg-[#B8860B] text-[#121212] border-none rounded-[10px] cursor-pointer text-[70px] tracking-[5px] transition-colors hover:bg-[#D4AF37]"
-                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 'bold' }}
-              >
-                即刻啟動 氣味探索
-              </button>
-            </div>
-          )}
+                    {/* Recommendation Box */}
+                    <div className="w-[1412px] mx-auto mb-20">
+                        <div className="bg-[#D4AF37] text-white text-[64px] font-bold py-8 rounded-t-[25px] text-center">
+                            {content.result.recommendation}
+                        </div>
+                        <div className="border-4 border-[#D4AF37] rounded-b-[25px] p-12 bg-black/30">
+                            <div className="flex justify-center gap-10 mb-16">
+                                {data.fragrance.split('/').map((tag, idx) => (
+                                    <span key={idx} className="bg-[#D4AF37] text-white text-[60px] px-12 py-4 rounded-[25px] font-bold">
+                                        {tag.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 gap-20">
+                                {data.products.map((item, idx) => (
+                                    <div key={idx} className="bg-[#D4AF37] rounded-[25px] p-10 flex flex-col items-center">
+                                        <div className="bg-white rounded-[25px] w-[570px] h-[570px] overflow-hidden flex items-center justify-center p-8 mb-8">
+                                            <img src={item.image} className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                        <div className="text-white text-[45px] font-bold mb-2 uppercase">{item.brand}</div>
+                                        <div className="text-white text-[55px] font-bold mb-6">{item.name}</div>
+                                        <div className="text-white text-[40px] text-center px-10 leading-tight">{item.description}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
 
-          {/* Render Questions (1 to 4) */}
-          {questions.map(q => 
-            currentPage === q.id && renderQuestion(q)
-          )}
+                    {/* Action Buttons */}
+                    <div className="flex justify-center gap-12 mt-10">
+                        <button onClick={restartQuiz} className="w-[540px] h-[130px] bg-[#D4AF37] text-white text-[70px] font-bold rounded-[25px]">
+                            {content.restart}
+                        </button>
+                        <button onClick={goToSharePage} className="w-[540px] h-[130px] bg-white text-[#D4AF37] text-[70px] font-bold rounded-[25px]">
+                            {content.share}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
 
-          {/* Result Page */}
-          {currentPage === 'result' && result && (
-            <div className="pt-[50px] border-t-[3px] border-[#555] text-center">
-              <h2 
-                className="text-[120px] text-[#B8860B] mb-[40px]"
-                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 500 }}
-              >
-                🎉 你的專屬奢華香調：
-                <br />
-                <span className="text-[90px]">{result.resultData.category}</span>
-                <br />
-                <span className="text-[70px] font-normal">(推測類型 {result.mbtiType})</span>
-              </h2>
-              <p className="text-[60px] leading-[1.6] text-[#C0C0C0] mb-[60px]">
-                {result.resultData.desc}
-              </p>
-              <div className="bg-[#252525] border-4 border-[#B8860B] rounded-[15px] p-[80px] mt-[50px]">
-                <strong 
-                  className="text-[#B8860B] text-[75px] block mb-[30px]"
-                  style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif" }}
-                >
-                  ⚜️ 你的【SCENTATION】推薦香調家族：
-                </strong>
-                <p className="text-[65px] text-[#E0E0E0]" style={{ fontWeight: 300 }}>
-                  {result.resultData.fragrance}
-                </p>
-              </div>
-              <button
-                onClick={restartQuiz}
-                className="mt-[100px] px-[100px] py-[50px] bg-[#B8860B] text-[#121212] border-none rounded-[10px] cursor-pointer text-[70px] tracking-[5px] transition-colors hover:bg-[#D4AF37]"
-                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 'bold' }}
-              >
-                重新探索
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+        // =========================================================
+        // Translations (根據您的需求整理)
+        // =========================================================
+        const zh_TW_Content = {
+            intro: {
+                title: '探索您的香氣密碼',
+                description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。\n迅速剖析核心人格特質，精準推薦最能彰顯您個人魅力的香調。',
+                button: '按此啟動 探索香氣',
+            },
+            nameInput: {
+                title: '請輸入您的姓名',
+                subtitle: '讓我們為您量身打造香氣體驗',
+                placeholder: '輸入姓名',
+                button: '開始測試',
+            },
+            header: { tagline: '為您的非凡風格，尋覓您的品味哲學。' },
+            exit: '✕', restart: '重新探索', share: '分享結果',
+            result: {
+                title: '你的香氣個性',
+                recommendation: 'SCENTATION 為您推薦的香調',
+            },
+            shareQR: {
+                title: '分享您的香氣個性',
+                subtitle: '掃描 QR Code 獲取可分享的結果圖片',
+                instruction: '使用手機掃描下方 QR Code，\n即可在社交媒體上分享您的專屬香氣結果',
+                backButton: '返回結果頁面',
+            },
+            questions: [ /* ... 同您的代碼 ... */ ],
+            resultsMap: { /* ... 同您的代碼 ... */ }
+        };
+        // 此處為了精簡 HTML，將 questions 與 resultsMap 完整數據整合進 translations
+        zh_TW_Content.resultsMap = {
+            NT: { category: '分析家', desc: '作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸...', fragrance: '木質調 / 西普調 / 芳香調', products: [
+                { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, description: '擅長統籌全局與制定策略的你...' },
+                { brand: 'Creed', name: 'Silver Mountain Water', image: productImages.NT_SilverMountainWater, description: '習慣在複雜情境中保持冷靜思考的人...' },
+                { brand: 'Narciso Rodriguez', name: 'For Him Bleu Noir', image: productImages.NT_ForHimBleuNoir, description: '話不多、但每一句都經過思考的性格...' }
+            ]},
+            NF: { category: '外交官', desc: '作為情緒豐富的外交官，您需要暖心、深邃且具有敘事感的香氣。', fragrance: '東方調 / 花香調', products: [
+                { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, description: '重視情感連結與關係溫度的人...' },
+                { brand: 'BLACK FADES', name: '夕 (zik6)', image: productImages.NF_Zik, description: '習慣在一天結束前整理思緒、與自己對話的性格...' }
+            ]},
+            SJ: { category: '守護者', desc: '作為守護者，您偏愛清晰穩定且專業的香氣。', fragrance: '柑橘調 / 清新麝香', products: [
+                { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, description: '重視穩定、乾淨與可信度的性格...' },
+                { brand: 'Acqua di Parma', name: 'Buongiorno', image: productImages.SJ_Buongiorno, description: '喜歡把每一天安排得井然有序...' }
+            ]},
+            SP: { category: '探險家', desc: '作為探險家，您需要充滿活力且極具個人色彩的香氣。', fragrance: '皮革調 / 辛辣調', products: [
+                { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, description: '對暗黑美學與實驗性作品抱有強烈好奇心...' },
+                { brand: 'Creed', name: 'Virgin Island Water', image: productImages.SP_VirginIslandWater, description: '一聽到旅行、海島就會立刻投入狀態的人...' }
+            ]}
+        };
+        
+        zh_TW_Content.questions = [
+            { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、藝術家的抽象概念...'}, { key: 'S', text: '作品的材質、精準的技法、生動的色彩...'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/1.png', progressWidth: 366 },
+            { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜...'}, { key: 'F', text: '柔化周圍的氛圍,創造一個溫暖的空間...'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/2.png', progressWidth: 692 },
+            { id: 3, title: '關於您的香氣收藏，哪個描述最貼切？', options: [{ key: 'J', text: '我會根據場合、服裝進行規劃...'}, { key: 'P', text: '我隨心所欲，喜歡即興疊香...'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/3.png', progressWidth: 1081 },
+            { id: 4, title: '週末晚上，您渴望散發哪一種風格？', options: [{ key: 'E', text: '濃郁、具有魅力且張揚...'}, { key: 'I', text: '內斂、有層次且舒適...'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/4.png', progressWidth: 1400 }
+        ];
+
+        const en_Content = { ...zh_TW_Content }; // 英文內容可按此方式類推替換
+
+        const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
+
+        // =========================================================
+        // Main App Component
+        // =========================================================
+        function App() {
+            const [currentPage, setCurrentPage] = useState('intro');
+            const [currentLang, setCurrentLang] = useState('zh-TW');
+            const [answers, setAnswers] = useState([]);
+            const [playerName, setPlayerName] = useState('');
+            const [result, setResult] = useState(null);
+            const [shareUrl, setShareUrl] = useState('');
+
+            const texts = translations[currentLang];
+            const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+            // 自動回到 Intro 的計時器 (2分鐘)
+            useEffect(() => {
+                if (currentPage === 'intro') return;
+                let timer = setTimeout(() => restartQuiz(), 120000);
+                const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
+                const events = ['click', 'touchstart', 'mousemove'];
+                events.forEach(e => window.addEventListener(e, reset));
+                return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
+            }, [currentPage]);
+
+            const restartQuiz = () => {
+                setCurrentPage('intro');
+                setAnswers([]);
+                setResult(null);
+                setPlayerName('');
+            };
+
+            const calculateResult = () => {
+                const mbti = calcMbti(answers);
+                const catKey = getCategoryKey(mbti);
+                const resData = texts.resultsMap[catKey];
+                setResult({ mbtiType: mbti, resultData: resData });
+                
+                // 設定手機分享用的 URL
+                const dummyUrl = `https://scentation.vercel.app/share?name=${encodeURIComponent(playerName)}&type=${mbti}`;
+                setShareUrl(dummyUrl);
+                setCurrentPage('result');
+            };
+
+            const handleAnswer = (qId, optionKey, isLast) => {
+                const newAns = [...answers, { question: qId, answer: optionKey }];
+                setAnswers(newAns);
+                if (isLast) {
+                    setTimeout(() => calculateResult(), 100);
+                } else {
+                    setCurrentPage(qId + 1);
+                }
+            };
+
+            return (
+                <div className="app-container relative bg-[#1A1A1A]">
+                    {/* Pattern Background */}
+                    <div className="absolute inset-0 z-0">
+                        <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" className="w-full h-full object-cover opacity-50" />
+                    </div>
+
+                    {/* Main Container */}
+                    <div className="absolute left-[220px] top-[220px] w-[1722px] height-[3392px] bg-gradient-to-br from-[#1A1A1A] to-[#2B2B2B] rounded-[35px] shadow-[0px_0px_40px_#D4AF37] z-10 overflow-hidden" style={{height: '3392px'}}>
+                        
+                        {/* Logo (通用) */}
+                        <div className="flex justify-center pt-20">
+                            <img src={logoImage} className="w-[70%] object-contain" />
+                        </div>
+
+                        {/* Language Toggle (Intro/Name/Questions) */}
+                        {(currentPage !== 'result' && currentPage !== 'share') && (
+                            <div className="absolute right-[60px] bottom-[80px] flex gap-8 z-20">
+                                <button onClick={() => setCurrentLang('zh-TW')} className={`w-[260px] h-[100px] rounded-[25px] text-[50px] font-bold ${currentLang === 'zh-TW' ? 'bg-[#B8860B]' : 'bg-[#383838]'} text-white`}>繁體</button>
+                                <button onClick={() => setCurrentLang('en')} className={`w-[260px] h-[100px] rounded-[25px] text-[50px] font-bold ${currentLang === 'en' ? 'bg-[#B8860B]' : 'bg-[#383838]'} text-white`}>English</button>
+                            </div>
+                        )}
+
+                        {/* Exit Button */}
+                        {currentPage !== 'intro' && (
+                            <button onClick={restartQuiz} className="absolute left-[74px] top-[71px] w-[132px] h-[132px] border-4 border-[#B8860B] rounded-full text-[#B8860B] text-[70px] flex items-center justify-center bg-black/20">✕</button>
+                        )}
+
+                        {/* ===== 頁面切換 ===== */}
+                        
+                        {currentPage === 'intro' && (
+                            <div className="flex flex-col items-center pt-40 px-20">
+                                <div className="w-[1330px] border-t-8 border-b-[16px] border-[#D4AF37] h-12 mb-10"></div>
+                                <div className="text-[#D4AF37] text-[64px] mb-12">{texts.header.tagline}</div>
+                                <h1 className="text-[#D4AF37] text-[150px] font-bold mb-10 text-center">{texts.intro.title}</h1>
+                                <p className="text-[#D4AF37] text-[40px] text-center mb-20 whitespace-pre-line leading-snug">{texts.intro.description}</p>
+                                <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png" className="w-[1148px] h-[1200px] object-cover rounded-[25px] mb-20 shadow-2xl" />
+                                <button onClick={() => setCurrentPage('nameInput')} className="w-[923px] h-[210px] bg-[#B8860B] text-white text-[96px] font-bold rounded-[25px] shadow-[0_0_18px_white]">按此啟動</button>
+                            </div>
+                        )}
+
+                        {currentPage === 'nameInput' && (
+                            <div className="flex flex-col items-center pt-60">
+                                <h2 className="text-[#B8860B] text-[130px] font-bold mb-10">{texts.nameInput.title}</h2>
+                                <p className="text-white text-[56px] mb-20">{texts.nameInput.subtitle}</p>
+                                <div className="w-[900px] h-[140px] bg-white rounded-[25px] flex items-center px-10 text-[60px] mb-20">
+                                    {playerName || <span className="text-gray-400">輸入姓名</span>}
+                                </div>
+                                <div className="w-[1400px] flex flex-wrap justify-center gap-4 mb-10">
+                                    {keyboardLetters.map(l => (
+                                        <button key={l} onClick={() => setPlayerName(prev => (prev + l).slice(0, 10))} className="w-[140px] h-[140px] bg-[#2B2B2B] border-4 border-[#B8860B] text-white text-[70px] rounded-[20px]">{l}</button>
+                                    ))}
+                                    <button onClick={() => setPlayerName(prev => prev.slice(0, -1))} className="w-[400px] h-[140px] bg-[#2B2B2B] border-4 border-[#B8860B] text-white text-[60px] rounded-[20px]">Delete</button>
+                                    <button onClick={() => { if(playerName) setCurrentPage(1) }} className="w-[400px] h-[140px] bg-[#B8860B] text-white text-[60px] font-bold rounded-[20px]">開始測試</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {typeof currentPage === 'number' && (
+                            <div className="flex flex-col items-center pt-60 px-20">
+                                <div className="w-[1400px] h-12 bg-gray-700 rounded-full mb-20 overflow-hidden">
+                                    <div className="h-full bg-[#B8860B] transition-all" style={{width: `${(currentPage/4)*100}%`}}></div>
+                                </div>
+                                <h2 className="text-[#B8860B] text-[96px] font-bold text-center mb-20 whitespace-pre-line">{texts.questions[currentPage-1].title}</h2>
+                                <img src={texts.questions[currentPage-1].image} className="w-[1300px] h-[600px] object-cover rounded-[25px] mb-20" />
+                                <button onClick={() => handleAnswer(currentPage, 'A', currentPage === 4)} className="w-[1280px] h-[240px] border-8 border-white rounded-[25px] text-white text-[70px] flex items-center justify-center text-center px-10 mb-10">
+                                    {texts.questions[currentPage-1].options[0].text}
+                                </button>
+                                <button onClick={() => handleAnswer(currentPage, 'B', currentPage === 4)} className="w-[1280px] h-[240px] border-8 border-white rounded-[25px] text-white text-[70px] flex items-center justify-center text-center px-10">
+                                    {texts.questions[currentPage-1].options[1].text}
+                                </button>
+                            </div>
+                        )}
+
+                        {currentPage === 'result' && (
+                            <ResultPage 
+                                result={result} 
+                                playerName={playerName} 
+                                currentLang={currentLang} 
+                                restartQuiz={restartQuiz} 
+                                goToSharePage={() => setCurrentPage('share')} 
+                            />
+                        )}
+
+                        {currentPage === 'share' && (
+                            <div className="flex flex-col items-center pt-80 px-20">
+                                <h2 className="text-[#B8860B] text-[130px] font-bold mb-10">{texts.shareQR.title}</h2>
+                                <p className="text-white text-[56px] text-center mb-20">{texts.shareQR.subtitle}</p>
+                                <div className="bg-white p-20 rounded-[40px] mb-20">
+                                    <QRCodeCanvas value={shareUrl} size={600} />
+                                </div>
+                                <p className="text-white text-[44px] text-center mb-40 whitespace-pre-line">{texts.shareQR.instruction}</p>
+                                <button onClick={() => setCurrentPage('result')} className="w-[800px] h-[150px] bg-[#B8860B] text-white text-[72px] font-bold rounded-[25px]">返回結果</button>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

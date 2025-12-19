@@ -3,53 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCENTATION - 探索您的香氣密碼</title>
-    
+    <title>SCENTATION Kiosk</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/qrcode.react@3.1.0/dist/qrcode.react.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #1A1A1A; /* 基礎底色防止閃白 */
-            font-family: 'Inter', sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        #root {
-            width: 2160px;
-            height: 3840px;
-        }
-        .app-container {
-            width: 2160px;
-            height: 3840px;
-            position: relative;
-        }
-        /* 隱藏滾動條但保持功能 */
+        body, html { margin: 0; padding: 0; background-color: #1A1A1A; overflow: hidden; width: 2160px; height: 3840px; }
+        #root { width: 2160px; height: 3840px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 確保字體正確 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useCallback, useEffect, useMemo } = React;
-        const QRCodeCanvas = QRCodeReact.QRCodeCanvas;
+        const { useState, useCallback, useEffect } = React;
 
         // =========================================================
-        // 1. 圖片與資料結構定義 (修正路徑與補完)
+        // 1. 資源與數據 (整合原本分散的檔案)
         // =========================================================
+        const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_A4.png';
         const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
         const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
-        const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_A4.png';
 
         const productImages = {
             NT_Aventus: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Aventus%20Collection-Aventus_edp.jpg',
@@ -68,210 +48,119 @@
             SP_Wandervogel: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_27%2087_Wandervogel_edp.jpg',
         };
 
-        const calcMbti = (answers) => {
-            const counts = { N: 0, S: 0, T: 0, F: 0, J: 0, P: 0, E: 0, I: 0 };
-            answers.forEach(ans => {
-                if (ans.question === 1) ans.answer === 'A' ? counts.N++ : counts.S++;
-                if (ans.question === 2) ans.answer === 'A' ? counts.T++ : counts.F++;
-                if (ans.question === 3) ans.answer === 'A' ? counts.J++ : counts.P++;
-                if (ans.question === 4) ans.answer === 'A' ? counts.E++ : counts.I++;
-            });
-            return [
-                counts.E >= counts.I ? 'E' : 'I',
-                counts.N >= counts.S ? 'N' : 'S',
-                counts.T >= counts.F ? 'T' : 'F',
-                counts.J >= counts.P ? 'J' : 'P'
-            ].join('');
-        };
-
-        const getCategoryKey = (mbti) => {
-            if (mbti.includes('N') && mbti.includes('T')) return 'NT';
-            if (mbti.includes('N') && mbti.includes('F')) return 'NF';
-            if (mbti.includes('S') && mbti.includes('J')) return 'SJ';
-            if (mbti.includes('S') && mbti.includes('P')) return 'SP';
-            return 'NT';
-        };
-
-        // =========================================================
-        // 2. 語系與內容實體資料 (修正語法錯誤)
-        // =========================================================
         const zh_TW_Content = {
-            intro: {
-                title: '探索您的香氣密碼',
-                description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。\n迅速剖析核心人格特質，精準推薦最能彰顯您個人魅力的香調。',
-                button: '按此啟動 探索香氣',
-            },
-            nameInput: {
-                title: '請輸入您的姓名',
-                subtitle: '讓我們為您量身打造香氣體驗',
-                placeholder: '輸入姓名',
-                button: '開始測試',
-            },
-            header: { tagline: '為您的非凡風格，尋覓您的品味哲學。' },
-            exit: '✕', restart: '重新探索', share: '分享結果',
-            result: { title: '你的香氣個性', recommendation: 'SCENTATION 為您推薦的香調' },
-            shareQR: { title: '分享您的香氣個性', subtitle: '掃描 QR Code 獲取可分享的結果圖片', instruction: '使用手機掃描下方 QR Code，\n即可在社交媒體上分享您的專屬香氣結果', backButton: '返回結果頁面' },
+            intro: { title: '探索您的香氣密碼', description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。', button: '按此啟動 探索香氣' },
+            nameInput: { title: '請輸入您的姓名', subtitle: '讓我們為您量身打造香氣體驗', placeholder: '輸入姓名', button: '開始測試' },
             resultsMap: {
-                NT: { category: '分析家', desc: '作為邏輯至上、追求效率與複雜性的分析家。', fragrance: '木質調 / 西普調 / 芳香調', products: [
-                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, description: '擅長統籌全局與制定策略的你...' },
-                    { brand: 'Narciso Rodriguez', name: 'Bleu Noir', image: productImages.NT_ForHimBleuNoir, description: '穩重克制背後的邏輯與深度...' }
+                NT: { category: '分析家', desc: '邏輯至上、追求效率，散發獨特的品味與智慧。', fragrance: '木質調 / 西普調 / 芳香調', products: [
+                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, description: '擅長統籌全局與制定策略的你，會被 Aventus 那種煙燻菠蘿配合乾燥木質的結構吸引。' },
+                    { brand: 'Creed', name: 'Silver Mountain Water', image: productImages.NT_SilverMountainWater, description: '習慣在複雜情境中保持冷靜思考的人，會欣賞冷冽茶香與山泉氣息。' }
                 ]},
-                NF: { category: '外交官', desc: '作為情緒豐富的外交官，您需要具有敘事感的香氣。', fragrance: '東方調 / 花香調', products: [
-                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, description: '這支香水像一個循序漸進的擁抱...' },
-                    { brand: 'BLACK FADES', name: '夕 (zik6)', image: productImages.NF_Zik, description: '留下專屬於自己、不被打擾的 me-time。' }
+                NF: { category: '外交官', desc: '情緒豐富、溫暖而具有敘事感。', fragrance: '東方調 / 花香調', products: [
+                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, description: 'Ani 的香草層次豐富，特別適合營造安全感與信任氛圍。' },
+                    { brand: 'BLACK FADES', name: '夕 (zik6)', image: productImages.NF_Zik, description: '留下專屬於自己、不被打擾的黃昏靜謐。' }
                 ]},
-                SJ: { category: '守護者', desc: '作為守護者，您偏愛清晰穩定且專業的香氣。', fragrance: '柑橘調 / 清新麝香', products: [
-                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, description: '重視穩定、乾淨與可信度。' },
-                    { brand: 'Xerjoff', name: 'Torino 23', image: productImages.SJ_Torino23, description: '保持同樣得體而不呆板的形象。' }
+                SJ: { category: '守護者', desc: '清晰穩定且專業，實踐責任與規律。', fragrance: '柑橘調 / 清新麝香', products: [
+                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, description: '重視穩定與可信度，氣息如第二層肌膚般純淨。' }
                 ]},
-                SP: { category: '探險家', desc: '作為探險家，您需要充滿活力且極具個人色彩。', fragrance: '皮革調 / 辛辣調', products: [
-                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, description: '打破他人對你的既定印象。' },
-                    { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, description: '帶著一點未來感與實驗氣質。' }
+                SP: { category: '探險家', desc: '活力十足，熱愛自由與冒險。', fragrance: '皮革調 / 辛辣調 / 水生調', products: [
+                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, description: '厚重樹脂與煙燻沈香，打破既定印象的神秘感。' }
                 ]}
             },
             questions: [
-                { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、抽象概念與聯想空間。'}, { key: 'S', text: '作品的材質、精準技法與生動色彩表現。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/1.png', progressWidth: 366 },
-                { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜，散發專業氣場。'}, { key: 'F', text: '柔化氛圍，創造暖心空間與人際連結。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/2.png', progressWidth: 692 },
-                { id: 3, title: '關於您的香氛收藏，哪個描述最貼切？', options: [{ key: 'J', text: '會根據場合與計劃進行精準的分類選擇。'}, { key: 'P', text: '隨心所欲地使用，喜歡即興疊香的驚喜。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/3.png', progressWidth: 1081 },
-                { id: 4, title: '週末晚上，您渴望散發哪一種香氣風格？', options: [{ key: 'E', text: '濃郁且張揚，希望成為社交聚會的焦點。'}, { key: 'I', text: '內斂且有層次，只為自我鑑賞而保留。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/4.png', progressWidth: 1400 }
+                { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{key: 'N', text: '作品背後的哲思與抽象概念'}, {key: 'S', text: '作品的材質與精準技法'}] },
+                { id: 2, title: '在緊張的人際衝突中，您認為香氣的作用是什麼？', options: [{key: 'T', text: '幫助我保持清醒和冷靜，散發專業氣場'}, {key: 'F', text: '柔化氛圍，創造溫暖空間'}] },
+                { id: 3, title: '關於您的香氛收藏，哪個描述最貼切？', options: [{key: 'J', text: '會根據場合與計劃進行精準選擇'}, {key: 'P', text: '隨心所欲地使用，喜歡即興疊香'}] },
+                { id: 4, title: '週末晚上，您渴望散發哪一種風格？', options: [{key: 'E', text: '濃郁且張揚，希望成為社交焦點'}, {key: 'I', text: '內斂且有層次，自我鑑賞'}] }
             ]
         };
 
-        const translations = { 'zh-TW': zh_TW_Content, 'en': zh_TW_Content }; // 簡化為共用同資料
-
         // =========================================================
-        // 3. UI 組件
+        // 2. 主應用程式
         // =========================================================
-        const ResultPage = ({ result, playerName, currentLang, restartQuiz, goToSharePage }) => {
-            const texts = translations[currentLang];
-            const data = result.resultData;
-
-            return (
-                <div className="absolute inset-0 overflow-y-auto no-scrollbar pt-[380px] pb-40 px-20">
-                    <div className="text-center">
-                        <p className="text-white text-[56px] mb-6">親愛的 {playerName},</p>
-                        <h1 className="text-[#D4AF37] text-[100px] font-bold mb-8 uppercase tracking-tighter">{texts.result.title}</h1>
-                        <div className="w-[800px] border-t-4 border-[#D4AF37] mx-auto mb-10 opacity-50"></div>
-                        <h2 className="text-white text-[120px] font-bold mb-10 tracking-widest">{result.mbtiType}</h2>
-                        <p className="text-white text-[48px] px-20 mb-20 leading-relaxed opacity-90">{data.desc}</p>
-                    </div>
-
-                    <div className="w-[1500px] mx-auto bg-black/40 rounded-[40px] border-2 border-[#D4AF37]/30 p-16 mb-20">
-                        <div className="text-[#D4AF37] text-center text-[60px] font-bold mb-12">{texts.result.recommendation}</div>
-                        <div className="flex justify-center gap-6 mb-16">
-                            {data.fragrance.split('/').map((tag, i) => (
-                                <span key={i} className="bg-[#B8860B] text-white text-[48px] px-10 py-4 rounded-full font-bold">{tag.trim()}</span>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-2 gap-16">
-                            {data.products.map((p, i) => (
-                                <div key={i} className="bg-white/5 rounded-[30px] p-8 flex flex-col items-center border border-white/10">
-                                    <div className="w-[500px] h-[500px] bg-white rounded-2xl mb-8 flex items-center justify-center p-6 overflow-hidden">
-                                        <img src={p.image} className="max-w-full max-h-full object-contain" />
-                                    </div>
-                                    <p className="text-[#B8860B] text-[40px] font-bold uppercase">{p.brand}</p>
-                                    <p className="text-white text-[50px] font-bold mb-6">{p.name}</p>
-                                    <p className="text-white/70 text-[34px] text-center leading-snug">{p.description}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex justify-center gap-10">
-                        <button onClick={restartQuiz} className="w-[600px] h-[160px] bg-[#B8860B] text-white text-[64px] font-bold rounded-[30px] shadow-lg">重新開始</button>
-                        <button onClick={goToSharePage} className="w-[600px] h-[160px] bg-white text-[#B8860B] text-[64px] font-bold rounded-[30px] shadow-lg">分享結果</button>
-                    </div>
-                </div>
-            );
-        };
-
         function App() {
             const [currentPage, setCurrentPage] = useState('intro');
-            const [currentLang, setCurrentLang] = useState('zh-TW');
             const [playerName, setPlayerName] = useState('');
             const [answers, setAnswers] = useState([]);
             const [result, setResult] = useState(null);
 
-            const texts = translations[currentLang];
-            const keyboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
             const handleAnswer = (qId, key, isLast) => {
-                const newAnswers = [...answers, { question: qId, answer: key }];
-                setAnswers(newAnswers);
+                const newAns = [...answers, { question: qId, answer: key }];
+                setAnswers(newAns);
                 if (isLast) {
-                    const mbti = calcMbti(newAnswers);
-                    setResult({ mbtiType: mbti, resultData: texts.resultsMap[getCategoryKey(mbti)] });
+                    // 計算邏輯
+                    const n = newAns.filter(a => a.answer === 'N').length;
+                    const s = newAns.filter(a => a.answer === 'S').length;
+                    const t = newAns.filter(a => a.answer === 'T').length;
+                    const f = newAns.filter(a => a.answer === 'F').length;
+                    const j = newAns.filter(a => a.answer === 'J').length;
+                    const p = newAns.filter(a => a.answer === 'P').length;
+                    const e = newAns.filter(a => a.answer === 'E').length;
+                    const i = newAns.filter(a => a.answer === 'I').length;
+
+                    const mbti = (e >= i ? 'E':'I') + (n >= s ? 'N':'S') + (t >= f ? 'T':'F') + (j >= p ? 'J':'P');
+                    const categoryKey = mbti.includes('N') ? (mbti.includes('T') ? 'NT' : 'NF') : (mbti.includes('J') ? 'SJ' : 'SP');
+                    
+                    setResult({ type: mbti, data: zh_TW_Content.resultsMap[categoryKey] });
                     setCurrentPage('result');
                 } else {
                     setCurrentPage(qId + 1);
                 }
             };
 
-            const restartQuiz = () => {
-                setAnswers([]);
-                setResult(null);
-                setPlayerName('');
-                setCurrentPage('intro');
-            };
+            const reset = () => { setCurrentPage('intro'); setAnswers([]); setPlayerName(''); setResult(null); };
 
             return (
-                <div className="app-container overflow-hidden">
-                    {/* 背景底圖 */}
-                    <div className="absolute inset-0">
-                        <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" className="w-full h-full object-cover" />
+                <div className="app-container relative w-[2160px] h-[3840px] bg-[#1A1A1A]">
+                    {/* 背景圖層 */}
+                    <div className="absolute inset-0 z-0">
+                        <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" className="w-full h-full object-cover opacity-30" />
                     </div>
 
-                    {/* 黑色半透明主框架 */}
-                    <div className="absolute left-[180px] top-[180px] w-[1800px] h-[3480px] bg-gradient-to-b from-[#1A1A1A]/95 to-[#2B2B2B]/95 rounded-[60px] shadow-[0px_0px_100px_rgba(212,175,55,0.4)] border border-[#D4AF37]/20 overflow-hidden">
+                    {/* 主內容框架 */}
+                    <div className="absolute left-[180px] top-[180px] w-[1800px] h-[3480px] bg-gradient-to-b from-[#1A1A1A]/95 to-[#2B2B2B]/95 rounded-[60px] shadow-[0px_0px_100px_rgba(212,175,55,0.4)] border border-[#D4AF37]/20 z-10">
                         
-                        {/* 頂部 Logo */}
-                        <div className="flex justify-center pt-24 pb-12">
-                            <img src={logoImage} className="w-[800px] object-contain drop-shadow-lg" />
+                        <div className="flex justify-center pt-24">
+                            <img src={logoImage} className="w-[800px] object-contain" />
                         </div>
 
-                        {/* 退出按鈕 */}
                         {currentPage !== 'intro' && (
-                            <button onClick={restartQuiz} className="absolute left-16 top-16 w-32 h-32 rounded-full border-4 border-[#B8860B] text-[#B8860B] text-6xl flex items-center justify-center font-bold">✕</button>
+                            <button onClick={reset} className="absolute left-16 top-16 w-32 h-32 rounded-full border-4 border-[#B8860B] text-[#B8860B] text-6xl flex items-center justify-center font-bold">✕</button>
                         )}
 
-                        {/* 畫面渲染切換 */}
                         {currentPage === 'intro' && (
                             <div className="flex flex-col items-center pt-32 px-20 text-center">
-                                <div className="text-[#D4AF37] text-[60px] mb-12 uppercase tracking-[10px]">{texts.header.tagline}</div>
-                                <h1 className="text-[#D4AF37] text-[140px] font-bold mb-16 leading-tight">{texts.intro.title}</h1>
-                                <p className="text-white/80 text-[48px] mb-24 max-w-[1400px] leading-relaxed whitespace-pre-line">{texts.intro.description}</p>
-                                <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png" className="w-[1200px] h-[1000px] object-cover rounded-[50px] shadow-2xl border-4 border-[#D4AF37]/30 mb-32" />
-                                <button onClick={() => setCurrentPage('nameInput')} className="w-[1000px] h-[240px] bg-[#B8860B] text-white text-[100px] font-bold rounded-full shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-pulse">按此啟動</button>
+                                <div className="text-[#D4AF37] text-[60px] mb-12 tracking-[10px] uppercase">For Your Extraordinary Style</div>
+                                <h1 className="text-[#D4AF37] text-[150px] font-bold mb-16">{zh_TW_Content.intro.title}</h1>
+                                <p className="text-white/80 text-[48px] mb-24 max-w-[1400px] leading-relaxed whitespace-pre-line">{zh_TW_Content.intro.description}</p>
+                                <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png" className="w-[1200px] h-[1100px] object-cover rounded-[50px] mb-32 border-2 border-[#D4AF37]/20" />
+                                <button onClick={() => setCurrentPage('nameInput')} className="w-[1000px] h-[250px] bg-[#B8860B] text-white text-[100px] font-bold rounded-full shadow-2xl">按此啟動</button>
                             </div>
                         )}
 
                         {currentPage === 'nameInput' && (
                             <div className="flex flex-col items-center pt-64">
-                                <h2 className="text-[#D4AF37] text-[120px] font-bold mb-8">{texts.nameInput.title}</h2>
-                                <p className="text-white/60 text-[56px] mb-24">{texts.nameInput.subtitle}</p>
-                                <div className="w-[1000px] h-40 bg-white rounded-[30px] flex items-center justify-center text-[80px] font-bold text-black mb-32 shadow-inner">
+                                <h2 className="text-[#D4AF37] text-[120px] font-bold mb-12">{zh_TW_Content.nameInput.title}</h2>
+                                <div className="w-[1000px] h-40 bg-white rounded-3xl flex items-center justify-center text-[90px] font-bold text-black mb-32">
                                     {playerName || <span className="text-gray-300">TYPE NAME</span>}
                                 </div>
                                 <div className="w-[1400px] flex flex-wrap justify-center gap-6">
-                                    {keyboard.map(l => (
-                                        <button key={l} onClick={() => playerName.length < 12 && setPlayerName(p => p + l)} className="w-[160px] h-[160px] bg-white/10 border-2 border-[#D4AF37]/50 text-white text-7xl rounded-3xl active:bg-[#B8860B]">{l}</button>
+                                    {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(l => (
+                                        <button key={l} onClick={() => playerName.length < 12 && setPlayerName(p => p + l)} className="w-[160px] h-[160px] bg-white/10 border-2 border-[#D4AF37]/50 text-white text-7xl rounded-3xl">{l}</button>
                                     ))}
-                                    <button onClick={() => setPlayerName(p => p.slice(0, -1))} className="w-[340px] h-[160px] bg-red-900/40 border-2 border-red-500/50 text-white text-5xl rounded-3xl">DELETE</button>
-                                    <button onClick={() => playerName && setCurrentPage(1)} className="w-[340px] h-[160px] bg-green-700/60 border-2 border-green-500/50 text-white text-5xl rounded-3xl font-bold">START</button>
+                                    <button onClick={() => setPlayerName(p => p.slice(0, -1))} className="w-[340px] h-[160px] bg-red-900/40 border-2 border-red-500/50 text-white text-5xl rounded-3xl uppercase tracking-widest">Delete</button>
+                                    <button onClick={() => playerName && setCurrentPage(1)} className="w-[340px] h-[160px] bg-green-700/60 border-2 border-green-500/50 text-white text-5xl rounded-3xl font-bold tracking-widest uppercase">Start</button>
                                 </div>
                             </div>
                         )}
 
                         {typeof currentPage === 'number' && (
-                            <div className="flex flex-col items-center pt-40 px-20">
-                                <div className="w-[1400px] h-6 bg-white/10 rounded-full mb-32 overflow-hidden border border-white/5">
-                                    <div className="h-full bg-gradient-to-r from-[#B8860B] to-[#D4AF37] transition-all duration-700" style={{width: `${(currentPage/4)*100}%`}}></div>
-                                </div>
-                                <h2 className="text-[#D4AF37] text-[100px] font-bold text-center mb-24 leading-tight h-[300px] flex items-center">{texts.questions[currentPage-1].title}</h2>
-                                <img src={texts.questions[currentPage-1].image} className="w-[1400px] h-[800px] object-cover rounded-[50px] mb-32 shadow-2xl border-2 border-[#D4AF37]/20" />
+                            <div className="flex flex-col items-center pt-40 px-20 text-center">
+                                <h2 className="text-[#D4AF37] text-[100px] font-bold mb-24 leading-tight h-[300px] flex items-center">{zh_TW_Content.questions[currentPage-1].title}</h2>
+                                <img src={`https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/${currentPage}.png`} className="w-[1400px] h-[800px] object-cover rounded-[50px] mb-32 shadow-2xl" />
                                 <div className="flex flex-col gap-12 w-[1400px]">
-                                    {texts.questions[currentPage-1].options.map(opt => (
-                                        <button key={opt.key} onClick={() => handleAnswer(currentPage, opt.key, currentPage === 4)} className="w-full min-h-[260px] border-4 border-white/20 bg-white/5 rounded-[40px] text-white text-[60px] flex items-center justify-center text-center px-16 py-8 active:bg-[#B8860B] active:border-[#B8860B] transition-colors leading-snug">
+                                    {zh_TW_Content.questions[currentPage-1].options.map(opt => (
+                                        <button key={opt.key} onClick={() => handleAnswer(currentPage, opt.key, currentPage === 4)} className="w-full min-h-[280px] border-4 border-white/30 bg-white/5 rounded-[40px] text-white text-[64px] flex items-center justify-center text-center px-16 active:bg-[#B8860B] transition-all">
                                             {opt.text}
                                         </button>
                                     ))}
@@ -279,27 +168,46 @@
                             </div>
                         )}
 
-                        {currentPage === 'result' && (
-                            <ResultPage result={result} playerName={playerName} currentLang={currentLang} restartQuiz={restartQuiz} goToSharePage={() => setCurrentPage('share')} />
-                        )}
-
-                        {currentPage === 'share' && (
-                            <div className="flex flex-col items-center pt-80 px-20">
-                                <h2 className="text-[#D4AF37] text-[130px] font-bold mb-10 uppercase tracking-tighter">SHARE</h2>
-                                <p className="text-white/80 text-[60px] text-center mb-24">掃描二維碼獲取您的香氣名片</p>
-                                <div className="bg-white p-20 rounded-[60px] shadow-[0_0_100px_rgba(255,255,255,0.2)] mb-24">
-                                    <QRCodeCanvas value={`https://scentation.com/share?name=${playerName}&type=${result.mbtiType}`} size={700} />
+                        {currentPage === 'result' && result && (
+                            <div className="absolute inset-0 overflow-y-auto no-scrollbar pt-[400px] pb-40 px-20">
+                                <div className="text-center">
+                                    <p className="text-white text-[56px] mb-6">親愛的 {playerName},</p>
+                                    <h1 className="text-[#D4AF37] text-[120px] font-bold mb-10 tracking-widest">{result.data.category}</h1>
+                                    <h2 className="text-white text-[100px] font-bold mb-12 opacity-50 tracking-[20px] uppercase">{result.type}</h2>
+                                    <p className="text-white text-[50px] px-20 mb-20 leading-relaxed">{result.data.desc}</p>
                                 </div>
-                                <button onClick={() => setCurrentPage('result')} className="w-[800px] h-[180px] bg-white/10 border-4 border-[#B8860B] text-[#B8860B] text-[72px] font-bold rounded-full">返回結果</button>
+
+                                <div className="w-[1500px] mx-auto bg-black/40 rounded-[60px] border-2 border-[#D4AF37]/30 p-20 mb-24">
+                                    <div className="text-[#D4AF37] text-center text-[70px] font-bold mb-12 italic">專屬香水推介</div>
+                                    <div className="grid grid-cols-2 gap-16">
+                                        {result.data.products.map((p, i) => (
+                                            <div key={i} className="flex flex-col items-center">
+                                                <div className="w-[500px] h-[500px] bg-white rounded-3xl mb-8 flex items-center justify-center p-8">
+                                                    <img src={p.image} className="max-w-full max-h-full object-contain" />
+                                                </div>
+                                                <p className="text-[#D4AF37] text-[40px] font-bold mb-2">{p.brand}</p>
+                                                <p className="text-white text-[55px] font-bold mb-6">{p.name}</p>
+                                                <p className="text-white/60 text-[36px] text-center leading-snug">{p.description}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col items-center mb-20">
+                                    <div className="bg-white p-16 rounded-[40px] mb-8">
+                                        <img src={`https://chart.googleapis.com/chart?cht=qr&chs=500x500&chl=${encodeURIComponent('https://scentation.com/share?name='+playerName+'&type='+result.type)}`} className="w-[600px] h-[600px]" />
+                                    </div>
+                                    <p className="text-white/60 text-[44px]">掃描 QR Code 獲取您的專屬香氣名片</p>
+                                </div>
+
+                                <button onClick={reset} className="w-[1000px] h-[200px] bg-[#B8860B] text-white text-[80px] font-bold rounded-full block mx-auto">重新啟動</button>
                             </div>
                         )}
-
                     </div>
                 </div>
             );
         }
 
-        // 啟動渲染
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>

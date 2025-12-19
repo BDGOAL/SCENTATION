@@ -1,596 +1,280 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scentation Interactive Quiz</title>
+import React, { useState, useCallback, useMemo } from 'react';
+import logoImage from 'figma:asset/ee53a9af49c512b0092c46a5136839eadad379b4.png';
+
+type ScoreKey = 'N' | 'S' | 'J' | 'P' | 'T' | 'F' | 'E' | 'I';
+type Page = 'intro' | 1 | 2 | 3 | 4 | 'result';
+type CategoryKey = 'NT' | 'NF' | 'SJ' | 'SP';
+
+interface ResultData {
+  category: string;
+  desc: string;
+  fragrance: string;
+}
+
+const resultsMap: Record<CategoryKey, ResultData> = {
+  NT: {
+    category: '一、分析家 (The Analysts)',
+    desc: '作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸，偏愛能激發思考或帶有神秘感的氣味。您的香氣必須展現出獨特的品味與智慧。',
+    fragrance: '🪶 木質調 (Woody) / 🌲 西普調 (Chypre) / 🌿 芳香調 (Aromatic)'
+  },
+  NF: {
+    category: '二、外交家 (The Diplomats)',
+    desc: '作為情感豐富、注重人際連結的外交家，您需要溫暖、具有深度和故事感的香氣。您的香氣將在繁忙中尋求情感支持，或在社交中散發親切魅力。',
+    fragrance: '🔥 東方調 (Oriental / Amber) / 🌸 花香調 (Floral) / 🧁 美食調 (Gourmand)'
+  },
+  SJ: {
+    category: '三、守衛者 (The Sentinels)',
+    desc: '作為務實可靠、遵循規則的守衛者，您偏愛清晰、可靠、不過分張揚的「安全」香氣。您的香氣必須完美過關，帶來安心感和專業感。',
+    fragrance: '👔 馥奇調 (Fougere) / 🧼 潔淨麝香調 (Clean Musk) / 🍊 柑橘調 (Citrus)'
+  },
+  SP: {
+    category: '四、探險家 (The Explorers)',
+    desc: '作為活在當下、熱愛自由與刺激的探險家，您需要充滿活力、動感或帶有強烈個性的香氣。您的香氣應反映快節奏的生活和外向的個性。',
+    fragrance: '🧥 皮革調 (Leather) / 🌶️ 辛香調 (Spicy) / 🌊 水生調 (Aquatic)'
+  }
+};
+
+// 將問題內容從 UI 中分離出來，方便管理 (保留原問題和選項文案)
+const questions = [
+  { id: 1, title: '🎨 鑑賞藝術品時，您的目光會最先被什麼吸引？', options: [{ key: 'N', text: 'A. 作品背後的哲學思想、藝術家的抽象概念，以及它給予的無限聯想空間。'}, { key: 'S', text: 'B. 作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。'} ] },
+  { id: 2, title: '💔 在緊張的人際衝突中，您認為香氣的作用是什麼？', options: [{ key: 'T', text: 'A. 幫助我保持清醒和冷靜，散發出專業、不被情緒影響的穩定氣場。'}, { key: 'F', text: 'B. 柔化周圍的氛圍，創造一個溫暖、撫慰的空間，幫助人與人建立連結。'} ] },
+  { id: 3, title: '🗓️ 關於您收藏的各種香水，哪個描述最貼切？', options: [{ key: 'J', text: 'A. 我會根據場合、服裝、甚至是一週的計劃，為香水進行精準的分類和選擇。'}, { key: 'P', text: 'B. 我隨心所欲地使用香水，喜歡即興疊香，相信氣味帶來當下的感官驚喜。'} ] },
+  { id: 4, title: '🌃 週末晚上，您渴望散發哪一種香氣風格？', options: [{ key: 'E', text: 'A. 濃郁、具有魅力且張揚的香氣，希望成為社交聚會中最令人難忘的焦點。'}, { key: 'I', text: 'B. 內斂、有層次且舒適的香氣，它是我獨處時的儀式感，只為懂我的人停留。'} ] }
+];
+const totalQuestions = questions.length;
+
+
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<Page>('intro');
+  const [score, setScore] = useState<Record<ScoreKey, number>>({
+    N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0
+  });
+  const [result, setResult] = useState<{ mbtiType: string; resultData: ResultData } | null>(null);
+  
+  // 計算進度條百分比
+  const getProgress = useMemo(() => {
+    if (currentPage === 'intro') return 0;
+    if (currentPage === 'result') return 100;
+    return ((currentPage as number) / totalQuestions) * 100;
+  }, [currentPage]);
+
+
+  const calculateResult = useCallback((finalScore: Record<ScoreKey, number>) => {
+    const N_S = finalScore.N > finalScore.S ? 'N' : 'S';
+    const J_P = finalScore.J > finalScore.P ? 'J' : 'P';
+    const T_F = finalScore.T > finalScore.F ? 'T' : 'F';
+    const E_I = finalScore.E > finalScore.I ? 'E' : 'I';
+
+    const mbtiType = E_I + N_S + T_F + J_P;
     
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    // **Bug 修正核心邏輯:** 確保 S 類型能夠準確地導向 SP 或 SJ。
+    let finalKey: CategoryKey;
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display&display=swap');
+    if (N_S === 'N') {
+      // 分析家 (NT) 或 外交家 (NF)
+      finalKey = T_F === 'T' ? 'NT' : 'NF';
+    } else {
+      // 守衛者 (SJ) 或 探險家 (SP)
+      // S_F_ 傾向於 SJ (守衛者), S_T_ 傾向於 SP (探險家)
+      finalKey = T_F === 'F' ? 'SJ' : 'SP'; 
+    }
+
+    const resultData = resultsMap[finalKey];
+
+    setResult({ mbtiType, resultData });
+    setCurrentPage('result');
+  }, []);
+
+  // 處理回答
+  const handleAnswer = useCallback((scoreKey: ScoreKey, isLastQuestion: boolean = false) => {
+    // 優先更新分數
+    setScore(prevScore => {
+        const newScore = { ...prevScore, [scoreKey]: prevScore[scoreKey] + 1 };
         
-        * { box-sizing: border-box; }
-
-        body, html {
-            margin: 0; padding: 0;
-            background-color: #1A1A1A;
-            width: 100%; height: 100%;
-            -webkit-user-select: none; user-select: none;
-            overflow: hidden; /* Kiosk 預設無捲軸 */
-        }
-
-        #root { 
-            width: 2160px; height: 3840px; 
-            background-color: #1A1A1A;
-            opacity: 0; transition: opacity 0.5s ease-in; /* 淡入效果 */
-        }
-        
-        button { cursor: pointer; transition: opacity 0.1s; }
-        button:active { opacity: 0.8; }
-        button:focus { outline: none; }
-        
-        /* 載入畫面 */
-        #loading {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1A1A1A; color: #B8860B;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 40px; font-family: 'Inter', sans-serif;
-            z-index: 9999;
-        }
-        
-        /* 錯誤提示 (防止黑畫面) */
-        #fatal-error {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); color: #ff5555; z-index: 100000;
-            padding: 50px; font-size: 30px; white-space: pre-wrap; overflow: auto;
-        }
-    </style>
-</head>
-<body>
-    <div id="fatal-error"></div>
-    <div id="loading"><div>Loading System...</div></div>
-    <div id="root"></div>
-
-    <script>
-        window.onerror = function(msg, url, line) {
-            document.getElementById('loading').style.display = 'none';
-            const err = document.getElementById('fatal-error');
-            err.style.display = 'block';
-            err.innerHTML = "⚠️ System Error:\n" + msg + "\nLine: " + line;
-        };
-    </script>
-
-    <script type="text/babel">
-        const { useState, useCallback, useEffect, useLayoutEffect, useRef } = React;
-        const getBaseUrl = () => window.location.href.split('?')[0];
-
-        // --- 排版引擎 (自動切換 Kiosk / 手機) ---
-        const updateLayout = () => {
-            const root = document.getElementById('root');
-            const body = document.body;
-            if (!root) return;
-
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
-            const targetW = 2160;
-            const targetH = 3840;
-            const isMobile = screenW < 1000;
-
-            if (isMobile) {
-                // 手機：啟用捲軸，靠左上對齊
-                body.style.overflowY = 'auto';
-                body.style.overflowX = 'hidden';
-                const scale = screenW / targetW;
-                root.style.position = 'absolute';
-                root.style.left = '0';
-                root.style.top = '0';
-                root.style.transformOrigin = 'top left';
-                root.style.transform = `scale(${scale})`;
-                body.style.height = `${targetH * scale}px`;
-            } else {
-                // Kiosk：禁用捲軸，絕對置中
-                body.style.overflow = 'hidden';
-                body.style.height = '100%';
-                const scale = Math.min(screenW / targetW, screenH / targetH);
-                root.style.position = 'absolute';
-                root.style.left = '50%';
-                root.style.top = '50%';
-                root.style.transformOrigin = 'center center';
-                root.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            }
-            // 顯示畫面
-            root.style.opacity = 1;
-            const loader = document.getElementById('loading');
-            if(loader) loader.style.display = 'none';
-        };
-
-        window.addEventListener('load', updateLayout);
-        window.addEventListener('resize', updateLayout);
-        setTimeout(updateLayout, 300);
-
-        // --- 圖片資源 ---
-        const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
-        const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
-        const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
-        
-        const questionImages = {
-            q1: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/1.png',
-            q2: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/2.png',
-            q3: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/3.png',
-            q4: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/4.png',
-            intro: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png',
-        };
-
-        const productImages = {
-            NT_Aventus: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Aventus%20Collection-Aventus_edp.jpg',
-            NT_SilverMountainWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Silver%20Mountain%20Water_edp.jpg',
-            NT_ForHimBleuNoir: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Him%20Bleu%20Noir_edp.jpg',
-            NF_Ani: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Ani_Extrait.jpg',
-            NF_Nanshe: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Nanshe_Extrait.jpg',
-            NF_Lira: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Casamorati%20-%20Lira_edp.jpg',
-            NF_Zik: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_blackfades_zik.jpg',
-            SJ_ForHerEDT: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Her_edt.jpg',
-            SJ_Buongiorno: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Acqua%20di%20Parma_Buongiorno_edp.jpg',
-            SJ_Torino23: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Torino%2023_edp.jpg',
-            SP_HardLeather: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_LM%20Parfums_Hard%20Leather_Extrait%20de%20parfum.jpg',
-            SP_BlackAfgano: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nasomatto_Black%20Afgano_Extrait%20de%20parfum.jpg',
-            SP_VirginIslandWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Virgin%20Island%20Water_edp.jpg',
-            SP_Wandervogel: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_27%2087_Wandervogel_edp.jpg',
-        };
-
-        const zh_Questions = [
-            { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、藝術家的抽象概念，以及它給予的無限聯想空間。' }, { key: 'S', text: '作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。' }], image: questionImages.q1, progressWidth: 366 },
-            { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜，散發出專業、不被情緒影響的穩定氣場。' }, { key: 'F', text: '柔化周圍的氛圍,創造一個溫暖、撫慰的空間，幫助人與人建立連結。' }], image: questionImages.q2, progressWidth: 692 },
-            { id: 3, title: '關於您的香水收藏，\n哪個描述最貼切？', options: [{ key: 'J', text: '我會根據場合、服裝、甚至是一週的計劃，為香水進行精準的分類和選擇。' }, { key: 'P', text: '我隨心所欲地使用香水，喜歡即興疊香，相信氣帶來下的感官喜。' }], image: questionImages.q3, progressWidth: 1081 },
-            { id: 4, title: '週末晚上，您渴望散發\n哪一種香氣風格？', options: [{ key: 'E', text: '濃郁、具有魅力且張揚的香氣，希望成為社交聚會中最令人難忘的焦點。' }, { key: 'I', text: '內斂、有層次且舒適的香氣，它是我獨處時的儀式感，只為懂我的人停留。' }], image: questionImages.q4, progressWidth: 1400 },
-        ];
-
-        const en_Questions = [
-            { id: 1, title: 'When appreciating art,\nwhat first attracts you?', options: [{ key: 'N', text: 'The philosophical ideas behind the work, the artist\'s abstract concepts, and the unlimited associative space it provides.' }, { key: 'S', text: 'The material of the work, the precise technique, the vivid color representation, and the realistic scene it depicts.' }], image: questionImages.q1, progressWidth: 366 },
-            { id: 2, title: 'In tense conflict,\nwhat role does fragrance play?', options: [{ key: 'T', text: 'Helps me stay clear-headed and calm, exuding a professional, stable aura unaffected by emotions.' }, { key: 'F', text: 'Softens the atmosphere, creating a warm, comforting space to help build connections between people.' }], image: questionImages.q2, progressWidth: 692 },
-            { id: 3, title: 'Which best fits\nyour fragrance collection?', options: [{ key: 'J', text: 'I categorize and select fragrances precisely based on the occasion, outfit, or even my weekly plan.' }, { key: 'P', text: 'I use fragrances spontaneously, enjoying impromptu layering, trusting the sensory surprise.' }], image: questionImages.q3, progressWidth: 1081 },
-            { id: 4, title: 'On weekend evening,\nwhat scent style do you prefer?', options: [{ key: 'E', text: 'A rich, captivating, and expressive scent, hoping to be the most memorable focus of a gathering.' }, { key: 'I', text: 'A restrained, layered, and comfortable scent; my ritual when alone, lingering for those who know me.' }], image: questionImages.q4, progressWidth: 1400 },
-        ];
-
-        const zh_TW_Content = {
-            intro: { title: '探索您的香氣密碼', description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。\n迅速剖析核心人格特質，精準推薦最能彰顯您個人魅力的香調。', button: '按此啟動 探索香氣' },
-            nameInput: { title: '請輸入您的姓名', subtitle: '讓我們為您量身打造香氣體驗', placeholder: '輸入姓名', button: '開始測試' },
-            header: { tagline: '為您的非凡風格，尋覓您的品味哲學。' },
-            exit: '✕', restart: '重新探索', share: '分享結果',
-            result: { title: '你的香氣個性', greeting: '親愛的 [姓名]，', mbtiPrefix: '(', mbtiSuffix: ')', recommendation: 'SCENTATION 為您推薦的香調', recommendationLabel: '最適合您個性的香水' },
-            shareQR: { title: '分享您的香氣個性', subtitle: '掃描 QR Code 獲取可分享的結果圖片', instruction: '使用手機掃描下方 QR Code，\n即可在社交媒體上分享您的專屬香氣結果', backButton: '返回結果頁面' },
-            resultsMap: {
-                NT: { category: '分析家', desc: '作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸，偏愛能激發思考或帶有神秘感的氣味。您的香氣必須展現出獨特的品味與智慧。', fragrance: '木質調 / 西普調 / 芳香調', products: [
-                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, notes: '', description: '擅長統籌全局與制定策略的你，會被 Aventus 那種煙燻菠蘿配合乾燥木質的結構吸引。這支香水不流於表面的甜美，而是以深度與力量，映照你的判斷力與清晰的企圖心。' },
-                    { brand: 'Creed', name: 'Silver Mountain Water', image: productImages.NT_SilverMountainWater, notes: '', description: '習慣在複雜情境中保持距離與冷靜思考的人，會欣賞 Silver Mountain Water 冷冽茶香與金屬感山泉氣息的克制感。這款香氣既理性又純淨，很貼合你低調卻極具辨識度的存在方式。' },
-                    { brand: 'Narciso Rodriguez', name: 'For Him Bleu Noir', image: productImages.NT_ForHimBleuNoir, notes: '', description: '話不多、但每一句都經過思考的性格，與 Bleu Noir 內斂辛香與木質麝香的氣質非常相襯。這支香水不張揚，卻讓留心觀察你的人，感受到你沉穩克制背後的邏輯與深度。' }
-                ]},
-                NF: { category: '外交官', desc: '作為情緒豐富的外交官，您需要暖心、深邃且具有敘事感的香氣。', fragrance: '東方調 / 花香調', products: [
-                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, notes: '', description: '重視情感連結與關係溫度的人，會在 Ani 的香草中聞到一層層被辛香與木質托起的暖意。這支香水像一個循序漸進的擁抱，特別適合用來營造安全感與信任氛圍，讓人自然願意向你打開話題與心事。' },
-                    { brand: 'Nishane', name: 'Nanshe', image: productImages.NF_Nanshe, notes: '', description: '經常成為身邊人心靈樞紐、願意細心傾聽的你，與 Nanshe 帶粉感的玫瑰與皂感氣息十分契合。它就像一條乾淨而溫暖的毛毯，不搶走任何人的焦點，卻總在旁邊提供安穩與支持感。' },
-                    { brand: 'Casamorati (Xerjoff)', name: 'Lira', image: productImages.NF_Lira, notes: '', description: '擅長以溫柔與幽默打開距離的人，會欣賞 Lira 彷彿檸檬磅蛋糕般的美食香調。香氣像是一份剛出爐的甜點邀請，甜而不膩，讓你的體貼與好相處變得具體，可被記住也容易被親近。' },
-                    { brand: 'BLACK FADES', name: '夕 (zik6)', image: productImages.NF_Zik, notes: '', description: '習慣在一天結束前整理思緒、與自己對話的性格，很適合用上「夕 (zik6)」這款以黃昏為意象的香氣。苦檸檬、青檸與絲柏帶出略帶冷調的清新開端，彷彿日光將退未退，城市聲音逐漸安靜下來；隨後松木、苔蘚、岩蘭草、檜木、檀香與雪松堆疊出充滿木質與琥珀感的空間，好像走進只亮著暖燈的小房間，留下專屬於自己、不被打擾的 me-time。' }
-                ]},
-                SJ: { category: '守護者', desc: '作為守護者，您偏愛清晰穩定且專業的香氣。', fragrance: '柑橘調 / 清新麝香', products: [
-                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, notes: '', description: '重視穩定、乾淨與可信度的性格，與 For Her EDT 貼膚麝香的氣質高度呼應。香氣像天生自帶的體香一樣低調卻難以忽視，非常適合通勤、上班或家庭聚會，讓旁人自然把你和細心、體貼與可靠聯想在一起。' },
-                    { brand: 'Acqua di Parma', name: 'Buongiorno', image: productImages.SJ_Buongiorno, notes: '', description: '喜歡把每一天安排得井然有序、從早上開始就維持清醒狀態的人，會對 Buongiorno 的草本柑橘香特別有共鳴。它像為自己按下「正式開始」的一鍵啟動，不浮誇卻持續帶來清新有序的感覺，尤其適合需要專注處理細節的工作日早晨。' },
-                    { brand: 'Xerjoff', name: 'Torino 23', image: productImages.SJ_Torino23, notes: '', description: '同時重視禮貌、儀態與生活節奏的人，會在 Torino 23 身上找到理想的平衡。白花與木質底蘊勾勒出宛如運動後淋浴、換上乾淨衣物的清爽狀態，讓你無論處於正式或休閒場合，都能保持同樣得體而不呆板的形象。' }
-                ]},
-                SP: { category: '探險家', desc: '作為探險家，您需要充滿活力且極具個人色彩的香氣。', fragrance: '皮革調 / 辛辣調', products: [
-                    { brand: 'LM Parfums', name: 'Hard Leather', image: productImages.SP_HardLeather, notes: '', description: '樂於嘗試極強烈體驗、不介意被形容為「玩得很盡」的人，非常適合 Hard Leather 這種帶動物感的皮革與沈香組合。氣味存在感極強，不刻意取悅所有人，卻清楚保留你敢衝敢試的態度，尤其適合夜晚、派對或需要留下深刻印象的場合。' },
-                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, notes: '', description: '對暗黑美學與實驗性作品抱有強烈好奇心的性格，很容易與 Black Afgano 的厚重樹脂、煙燻與沈香產生共鳴。這支香水像一段不按常理出牌的旅程，適合用來打破他人對你的既定印象，或者為自己保留一份難以被看穿的神秘感。' },
-                    { brand: 'Creed', name: 'Virgin Island Water', image: productImages.SP_VirginIslandWater, notes: '', description: '一聽到旅行、海島或即興出走就會立刻投入狀態的人，會很適合用 Virgin Island Water 作為標誌性香氣。青檸、椰子與白蘭姆營造出如同行走假期般的氛圍，特別適合夏天、沙灘、音樂節或任何你打算輕鬆玩樂的場合。' },
-                    { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, notes: '', description: '喜歡說走就走、同時對新科技與新體驗保持高度興趣的人，會被 Wandervogel 帶紫蘇與海風感的前衛清新調吸引。這款香氣不走傳統乖巧路線，而是帶著一點未來感與實驗氣質，正好用來表達你不願被框限的一面。' }
-                ]}
-            },
-            questions: zh_Questions
-        };
-
-        const en_Content = {
-            intro: { title: 'Unlock Your Scent Code', description: 'In the fast-paced urban rhythm, your scent defines your aura.\nQuickly analyze your core personality traits and receive precise recommendations for a luxury scent that highlights your unique charm.', button: 'Discover Your Unique Charm' },
-            nameInput: { title: 'Enter Your Name', subtitle: 'Let us tailor a scent experience just for you', placeholder: 'Your name', button: 'Start Now' },
-            header: { tagline: 'The Philosophy of Taste:\nFinding your signature scent for your extraordinary style.' },
-            exit: '✕', restart: 'Restart Quiz', share: 'Share With Friends',
-            result: { title: 'Your Exclusive Fragrance:', greeting: 'Dear [NAME],', mbtiPrefix: ' ', mbtiSuffix: '', recommendation: 'Your SCENTATION Recommended Scent:', recommendationLabel: 'Recommended fragrances:' },
-            shareQR: { title: 'Share Your Scent Persona', subtitle: 'Scan the QR Code to get a sharable result image', instruction: 'Scan the QR Code with your phone\nto save and share your result on social media.', backButton: 'Back to Result Page' },
-            resultsMap: {
-                NT: { category: 'I. The Analysts', desc: 'As a logic-driven analyst pursuing efficiency and complexity,\nyou dislike mediocrity. You favor scents that provoke thought\nor carry a sense of mystery. Your fragrance must demonstrate\nunique taste and intelligence.', fragrance: 'Woody / Chypre / Aromatic', products: [
-                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, notes: '', description: 'If you enjoy organizing complex situations into clear, actionable plans, Aventus\' smoky pineapple combined with a dry woody structure amplifies your "well-planned and ambitious" side. What others smell is not just a pleasant fruity fragrance, but a person who knows how to control the rhythm and lead the situation.' },
-                    { brand: 'Creed', name: 'Silver Mountain Water', image: productImages.NT_SilverMountainWater, notes: '', description: 'If you prefer to maintain appropriate distance and perspective in interactions, this metallic cold tea scent makes you appear calmer, cleaner, and smarter—as if always standing at a slightly elevated position overlooking the chess board rather than being pushed by emotions.' },
-                    { brand: 'Narciso Rodriguez', name: 'For Him Bleu Noir', image: productImages.NT_ForHimBleuNoir, notes: '', description: 'If you\'re not naturally talkative, Bleu Noir\'s dark woody musk makes your silence "deep" rather than "lacking presence." People will find you difficult to read but simultaneously stable and restrained—like someone who doesn\'t act rashly but is worth listening to carefully when they do speak.' }
-                ] },
-                SJ: { category: 'III. The Sentinels', desc: 'As a pragmatic, reliable, and rule-following Sentinel, you favor clear, dependable, and not overly ostentatious "safe" scents. Your fragrance must pass perfectly, bringing a sense of security and professionalism.', fragrance: 'Fougere / Clean Musk / Citrus', products: [
-                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, notes: '', description: 'If you want to appear steady, clean, and reliable, For Her EDT\'s skin-like musk is understated but impossible to ignore. Perfect for daily commutes or family gatherings, it subconsciously links you to keywords like "meticulous, considerate, and trustworthy."' },
-                    { brand: 'Acqua di Parma', name: 'Buongiorno', image: productImages.SJ_Buongiorno, notes: '', description: 'If you like an organized start to your day, Buongiorno\'s herbal citrus scent is like a "start switch." It adds a layer of fresh orderliness to your presence without being loud—ideal for focused work mornings.' },
-                    { brand: 'Xerjoff', name: 'Torino 23', image: productImages.SJ_Torino23, notes: '', description: 'If you value manners and rhythm, Torino 23 smells like that fresh-showered moment after sports. Its white floral and woody base creates a "serious but not rigid" vibe, keeping you poised across formal and casual settings.' }
-                ] },
-                NF: { category: 'II. The Diplomats', desc: 'As an emotionally rich diplomat who values interpersonal connection,\nyou need warm, profound, and narrative scents.\nYour fragrance will seek emotional support\nor exude approachable charm in social settings.', fragrance: 'Oriental / Floral / Gourmand', products: [
-                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, notes: '', description: 'If emotional warmth matters to you, Ani\'s vanilla isn\'t just sweet—it\'s layered with spice and woods like a tightening hug. Use it to build safety and trust, encouraging others to open up to you.' },
-                    { brand: 'Nishane', name: 'Nanshe', image: productImages.NF_Nanshe, notes: '', description: 'If you often become the person in your friends\' eyes who "understands and listens to the heart," Nanshe\'s powdery rose and soapy scent adds a layer of soft and stable aura to you.' },
-                    { brand: 'Casamorati (Xerjoff)', name: 'Lira', image: productImages.NF_Lira, notes: '', description: 'If you want your first impression to be "easy to get along with, with a touch of sweetness," Lira\'s gourmand scent, like a lemon pound cake, makes you feel like inviting others to sit down and share a freshly baked dessert.' },
-                    { brand: 'BLACK FADES', name: 'Zik (夕)', image: productImages.NF_Zik, notes: '', description: '"Zik" (夕) refers to the time after dusk when the world gradually quiets down, leaving only yourself in dialogue with your inner self. The opening bitter lemon, lime, and cypress bring a cool freshness. Then, pine, moss, vetiver, hinoki, sandalwood, and cedar create a woody and amber-infused space, like walking into a warmly lit small room after dusk.' }
-                ] },
-                SP: { category: 'IV. The Explorers', desc: 'As an Explorer who lives in the moment and loves freedom and excitement,\nyou need vibrant, dynamic, or strongly individualistic scents.\nYour fragrance should reflect a fast-paced life\nand an extroverted personality.', fragrance: 'Leather / Spicy / Aquatic', products: [
-                    { brand: 'LM Parfums', name: 'Hard Leather', image: productImages.SP_HardLeather, notes: '', description: 'If you play big, Hard Leather\'s animalic oud makes you impossible to ignore. It doesn\'t aim to please everyone but keeps your bold attitude front and center—perfect for parties or making a strong impression.' },
-                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, notes: '', description: 'If you love "dark" or "experimental" vibes, Black Afgano\'s heavy resin and smoke creates a dangerous allure. It smells like an unconventional journey, ideal for challenging norms or maintaining mystery.' },
-                    { brand: 'Creed', name: 'Virgin Island Water', image: productImages.SP_VirginIslandWater, notes: '', description: 'If travel energizes you, this is a Piña Colada in a bottle. Lime, coconut, and rum create a "walking vacation" vibe, perfect for summer, festivals, or whenever you want to have fun.' },
-                    { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, notes: '', description: 'If you love spontaneity and new tech, Wandervogel\'s avant-garde shiso and sea breeze scent makes you look like you\'re seeking the next destination. It\'s futuristic and experimental, just like you.' }
-                ] },
-            },
-            questions: en_Questions
-        };
-
-        const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
-
-        // ★★★ 防止崩潰的 QR Code 組件 ★★★
-        const QRCodeComp = ({ value, size }) => {
-            const qrRef = useRef(null);
-            useEffect(() => {
-                // 延遲繪製，避免 React 還沒掛載 DOM 就畫圖
-                const timer = setTimeout(() => {
-                    if (qrRef.current && window.QRCode && value) {
-                        try {
-                            qrRef.current.innerHTML = "";
-                            new QRCode(qrRef.current, { 
-                                text: value, 
-                                width: size, 
-                                height: size, 
-                                colorDark: "#000000", 
-                                colorLight: "#ffffff", 
-                                correctLevel: QRCode.CorrectLevel.H 
-                            });
-                        } catch (e) {
-                            console.error(e);
-                            qrRef.current.innerHTML = "<p style='color:black'>QR Code Error</p>";
-                        }
-                    } else if (!window.QRCode) {
-                        if(qrRef.current) qrRef.current.innerHTML = "<p style='color:black; font-size:20px'>Library Loading...</p>";
-                    }
-                }, 100); // 0.1秒緩衝
-                return () => clearTimeout(timer);
-            }, [value, size]);
-            return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
-        };
-
-        const App = () => {
-            const [currentPage, setCurrentPage] = useState('intro');
-            const [currentLang, setCurrentLang] = useState('zh-TW');
-            const [score, setScore] = useState({ N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0 });
-            const [playerName, setPlayerName] = useState('');
-            const [result, setResult] = useState(null);
-            const [shareUrl, setShareUrl] = useState('');
-            const [isShareMode, setIsShareMode] = useState(false);
-
-            useEffect(() => { setTimeout(updateLayout, 300); }, []);
-
-            const texts = translations[currentLang];
-            const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-
-            // 初始化邏輯 (支援分享模式)
-            useEffect(() => {
-                try {
-                    const params = new URLSearchParams(window.location.search);
-                    const mode = params.get('mode');
-                    
-                    if (mode === 'share') {
-                        setIsShareMode(true);
-                        const name = params.get('name') || '';
-                        const type = params.get('type') || 'NT';
-                        const p1 = parseInt(params.get('p1') || '0');
-                        const p2 = parseInt(params.get('p2') || '1');
-                        const lang = params.get('lang') || 'zh-TW';
-
-                        if (lang === 'en' || lang === 'zh-TW') setCurrentLang(lang);
-                        
-                        let categoryKey = 'NT';
-                        if(type.includes('N') && type.includes('T')) categoryKey='NT';
-                        else if(type.includes('N') && type.includes('F')) categoryKey='NF';
-                        else if(type.includes('S') && type.includes('J')) categoryKey='SJ';
-                        else if(type.includes('S') && type.includes('P')) categoryKey='SP';
-
-                        const targetContent = (lang === 'en') ? en_Content : zh_TW_Content;
-                        const originalResultData = targetContent.resultsMap[categoryKey];
-                        
-                        if (originalResultData) {
-                            const prod1 = originalResultData.products[p1] || originalResultData.products[0];
-                            const prod2 = originalResultData.products[p2] || originalResultData.products[1];
-                            setPlayerName(name);
-                            setResult({ mbtiType: type, resultData: { ...originalResultData, products: [prod1, prod2] } });
-                            setCurrentPage('result');
-                        }
-                    } else {
-                        // Kiosk 閒置重置
-                        let timer;
-                        const reset = () => { clearTimeout(timer); timer = setTimeout(() => restartQuiz(), 120000); };
-                        ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'].forEach(e => window.addEventListener(e, reset));
-                        reset();
-                        return () => { clearTimeout(timer); events.forEach(e => window.removeEventListener(e, reset)); };
-                    }
-                } catch(e) {
-                    console.error("Init Error", e);
+        if (isLastQuestion) {
+            // 如果是最後一題，則調用 calculateResult
+            calculateResult(newScore);
+        } else {
+            // 如果不是最後一題，則切換頁面
+            setCurrentPage(prevPage => {
+                if (typeof prevPage === 'number' && prevPage < totalQuestions) {
+                    return (prevPage + 1) as 1 | 2 | 3 | 4;
                 }
-            }, []);
+                return prevPage;
+            });
+        }
+        return newScore;
+    });
 
-            const restartQuiz = useCallback(() => {
-                setCurrentPage('intro');
-                setScore({ N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0 });
-                setResult(null);
-                setPlayerName('');
-                setShareUrl('');
-            }, []);
+  }, [calculateResult]);
 
-            const calculateResult = useCallback((finalScore) => {
-                const N_S = finalScore.N > finalScore.S ? 'N' : 'S';
-                const J_P = finalScore.J > finalScore.P ? 'J' : 'P';
-                const T_F = finalScore.T > finalScore.F ? 'T' : 'F';
-                const E_I = finalScore.E > finalScore.I ? 'E' : 'I';
-                const mbtiType = E_I + N_S + T_F + J_P;
+  const startQuiz = useCallback(() => {
+    setCurrentPage(1);
+  }, []);
 
-                let finalKey;
-                if (N_S === 'N') { finalKey = T_F === 'T' ? 'NT' : 'NF'; }
-                else { finalKey = T_F === 'F' ? 'SJ' : 'SP'; }
+  const restartQuiz = useCallback(() => {
+    setCurrentPage('intro');
+    setScore({ N: 0, S: 0, J: 0, P: 0, T: 0, F: 0, E: 0, I: 0 });
+    setResult(null);
+  }, []);
 
-                const originalResultData = texts.resultsMap[finalKey];
-                
-                let selectedProducts;
-                if (finalKey === 'NF') {
-                    const zikProduct = originalResultData.products.find(p => p.brand === 'BLACK FADES');
-                    const otherProducts = originalResultData.products.filter(p => p.brand !== 'BLACK FADES');
-                    const randomOther = otherProducts.sort(() => Math.random() - 0.5)[0];
-                    selectedProducts = zikProduct ? [zikProduct, randomOther] : otherProducts.slice(0, 2);
-                } else {
-                    selectedProducts = [...originalResultData.products].sort(() => Math.random() - 0.5).slice(0, 2);
-                }
-                
-                const p1Index = originalResultData.products.findIndex(p => p.name === selectedProducts[0].name);
-                const p2Index = originalResultData.products.findIndex(p => p.name === selectedProducts[1].name);
+  const exitToIntro = useCallback(() => {
+    restartQuiz();
+  }, [restartQuiz]);
 
-                const resultData = { ...originalResultData, products: selectedProducts };
-                setResult({ mbtiType, resultData });
+  const showExitButton = currentPage !== 'intro' && currentPage !== 'result';
+  const showProgressBar = currentPage !== 'intro';
 
-                const baseUrl = getBaseUrl();
-                const params = new URLSearchParams({
-                    mode: 'share',
-                    name: playerName || '',
-                    type: mbtiType,
-                    p1: p1Index,
-                    p2: p2Index,
-                    lang: currentLang
-                });
-                setShareUrl(`${baseUrl}?${params.toString()}`);
-                setCurrentPage('result');
-            }, [playerName, texts.resultsMap, currentLang]);
+  // =========================================================
+  // UI 渲染邏輯
+  // =========================================================
+  const renderQuestion = (q: (typeof questions)[0]) => (
+    <div key={q.id} className="text-left">
+      <h2 
+        className="text-[80px] text-[#B8860B] mb-[70px] text-center"
+        style={{ 
+          fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", 
+          fontWeight: 500 
+        }}
+      >
+        {q.title}
+      </h2>
+      {q.options.map((option, index) => (
+        <button
+          key={index}
+          // 傳遞 isLastQuestion: 檢查當前問題 ID 是否等於總問題數
+          onClick={() => handleAnswer(option.key as ScoreKey, q.id === totalQuestions)}
+          className="block w-full py-[50px] px-[70px] my-[50px] bg-[#282828] border-2 border-[#555] rounded-[15px] cursor-pointer text-[60px] text-[#E0E0E0] text-left transition-all hover:bg-[#383838] hover:border-[#B8860B] hover:text-white"
+          style={{ 
+            fontFamily: "'Inter', 'Microsoft YaHei UI', sans-serif", 
+            fontWeight: 300 
+          }}
+        >
+          {option.text}
+        </button>
+      ))}
+    </div>
+  );
 
-            const handleAnswer = useCallback((scoreKey, isLastQuestion = false) => {
-                setScore(prevScore => {
-                    const newScore = { ...prevScore, [scoreKey]: prevScore[scoreKey] + 1 };
-                    if (isLastQuestion) calculateResult(newScore);
-                    else setCurrentPage(prevPage => (typeof prevPage === 'number' ? prevPage + 1 : prevPage));
-                    return newScore;
-                });
-            }, [calculateResult]);
 
-            const startQuiz = useCallback(() => { setCurrentPage('nameInput'); }, []);
-            const beginQuestions = useCallback(() => {
-                setPlayerName(prev => (prev && prev.trim() ? prev.trim() : ''));
-                setCurrentPage(1);
-            }, []);
-            const exitToIntro = useCallback(() => { restartQuiz(); }, [restartQuiz]);
-            const goToSharePage = useCallback(() => { if (shareUrl) setCurrentPage('share'); }, [shareUrl]);
-            const backToResultPage = useCallback(() => { setCurrentPage('result'); }, []);
+  return (
+    <div 
+      className="w-[2160px] h-[3840px] bg-[#121212] text-[#E0E0E0] flex justify-center items-center overflow-hidden"
+      style={{ fontFamily: "'Inter', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif" }}
+    >
+      <div className="w-[90%] max-w-[1900px] h-[90%] bg-[rgba(25,25,25,0.95)] border-[5px] border-[#B8860B] shadow-[0_0_50px_rgba(184,134,11,0.4)] rounded-[20px] px-[120px] py-[100px] text-center flex flex-col justify-between relative">
+        
+        {/* Exit Button */}
+        {showExitButton && (
+          <button
+            onClick={exitToIntro}
+            className="absolute top-[70px] left-[70px] w-[100px] h-[100px] bg-transparent border-2 border-[#B8860B] rounded-full text-[#B8860B] text-[60px] leading-[90px] cursor-pointer z-10 transition-all hover:bg-[#B8860B] hover:text-[#121212] flex items-center justify-center"
+          >
+            ×
+          </button>
+        )}
 
-            return (
-                <div style={{ position: 'relative', width: '2160px', height: '3840px', boxSizing: 'border-box' }}>
-                    {/* 背景圖 */}
-                    <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 }}>
-                        <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
+        {/* Header (使用 Figma Asset Logo) */}
+        <div className="pb-5 mb-8">
+          <div className="mb-2 flex justify-center">
+            <img 
+              src={logoImage} 
+              alt="SCENTATION Logo" 
+              // 調整圖片大小以符合標題區域，並保留香檳金光暈效果
+              className="h-[160px] w-auto" 
+              style={{
+                filter: 'drop-shadow(0 0 10px rgba(184, 134, 11, 0.8))'
+              }}
+            />
+          </div>
+          <p 
+            className="text-[50px] text-[#AAAAAA] font-light"
+            style={{ fontFamily: "'Inter', sans-serif" }}
+          >
+            品味哲學：為您的非凡風格，尋覓專屬氣味簽名。
+          </p>
+        </div>
 
-                    <div style={{
-                        position: 'absolute', width: '1722px', height: '3392px',
-                        left: currentPage === 'intro' ? '220px' : '219px',
-                        top: currentPage === 'intro' ? '222px' : '216px',
-                        background: 'linear-gradient(165.55deg, #1A1A1A 0%, #2B2B2B 100%)',
-                        boxShadow: '0px 0px 39.9px 1px #D4AF37', borderRadius: '35px'
-                    }}>
-                        <div style={{
-                            position: 'absolute', top: '0px', zIndex: 100,
-                            width: (currentPage === 'result' || currentPage === 'share') ? '864px' : '75%',
-                            left: (currentPage === 'result' || currentPage === 'share') ? 'calc(50% - 864px/2 + 1px)' : '12.5%'
-                        }}>
-                            <img src={logoImage} style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }} />
-                        </div>
+        {/* Progress Bar */}
+        {showProgressBar && (
+          <div className="w-full h-[30px] bg-[#333] rounded-[15px] mb-[50px] overflow-hidden">
+            <div 
+              className="h-full bg-[#B8860B] transition-all duration-500"
+              style={{ width: `${getProgress}%` }}
+            />
+          </div>
+        )}
 
-                        {currentPage !== 'result' && currentPage !== 'share' && !isShareMode && (
-                            <div style={{ position: 'absolute', width: '553.5px', height: '108px', right: '60px', bottom: '80px', zIndex: 50 }}>
-                                <div style={{ position:'absolute', width:'266px', height:'108px', left:0, top:0 }}>
-                                    <div style={{ position:'absolute', width:'100%', height:'100%', borderRadius:'25px', background: currentLang==='zh-TW'?'#B8860B':'#383838' }}></div>
-                                    <button onClick={()=>setCurrentLang('zh-TW')} style={{ position:'absolute', width:'100%', height:'100%', background:'transparent', border:'none', color:'#FFF', fontSize:'50px', fontFamily:"'Inter',sans-serif" }}>繁體</button>
-                                </div>
-                                <div style={{ position:'absolute', width:'266px', height:'108px', left:'286px', top:0 }}>
-                                    <div style={{ position:'absolute', width:'100%', height:'100%', borderRadius:'25px', background: currentLang==='en'?'#B8860B':'#383838' }}></div>
-                                    <button onClick={()=>setCurrentLang('en')} style={{ position:'absolute', width:'100%', height:'100%', background:'transparent', border:'none', color:'#FFF', fontSize:'50px', fontFamily:"'Inter',sans-serif" }}>English</button>
-                                </div>
-                            </div>
-                        )}
+        {/* Content Area */}
+        <div className="flex-grow pb-[100px]">
+          
+          {/* Intro Page */}
+          {currentPage === 'intro' && (
+            <div className="text-center">
+              <h2 
+                className="text-[80px] text-[#B8860B] mb-[70px]"
+                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 500 }}
+              >
+                啟程，解鎖您的香氣密碼
+              </h2>
+              <p className="text-[55px] leading-[1.8] text-[#E0E0E0] mb-[50px]">
+                於瞬息萬變的都會節奏中，您的選擇定義了您的氣場。本測試透過 **4 題精煉的美學情境**，迅速剖析您的核心人格特質，精準推薦最能彰顯您個人魅力的奢華香調家族。
+              </p>
+              
+              {/* 移除 H3 區塊，只保留開始按鈕 */}
+              <button
+                onClick={startQuiz}
+                className="mt-[100px] px-[100px] py-[50px] bg-[#B8860B] text-[#121212] border-none rounded-[10px] cursor-pointer text-[70px] tracking-[5px] transition-colors hover:bg-[#D4AF37]"
+                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 'bold' }}
+              >
+                即刻啟動 氣味探索
+              </button>
+            </div>
+          )}
 
-                        {!isShareMode && (
-                            <div style={{ position: 'absolute', left: '74px', top: '71px', zIndex: 52, display: currentPage==='intro'?'none':'block' }}>
-                                <div style={{ position: 'absolute', width: '132px', height: '132px', border: '5px solid #B8860B', borderRadius: '50%', boxSizing: 'border-box' }}></div>
-                                <button onClick={exitToIntro} style={{ position: 'absolute', width: '132px', height: '132px', background: 'transparent', border: 'none', color: '#B8860B', fontSize: '60px', fontFamily: "'Inter', sans-serif" }}>{texts.exit}</button>
-                            </div>
-                        )}
+          {/* Render Questions (1 to 4) */}
+          {questions.map(q => 
+            currentPage === q.id && renderQuestion(q)
+          )}
 
-                        {currentPage === 'intro' && (
-                            <>
-                                <div style={{ position: 'absolute', width: '1330px', height: '38px', left: 'calc(50% - 1330px/2)', top: currentLang === 'en' ? '500px' : '470px' }}>
-                                    <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '6px solid #B8860B' }}></div>
-                                    <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
-                                </div>
-                                
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
-                                
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
-                                
-                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
-
-                                <div style={{ position: 'absolute', width: '1331px', height: '38px', left: 'calc(50% - 1331px/2 + 0.5px)', top: currentLang === 'en' ? '1160px' : '1040px' }}>
-                                    <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '12px solid #B8860B' }}></div>
-                                    <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '6px solid #B8860B' }}></div>
-                                </div>
-
-                                <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1300px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
-                                    <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                                <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
-                                
-                                <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
-                                <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
-                            </>
-                        )}
-
-                        {currentPage === 'nameInput' && (
-                            <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 60 }}>
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.nameInput.title}</div>
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '880px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF' }}>{texts.nameInput.subtitle}</div>
-                                <div style={{ position: 'absolute', width: '900px', height: '140px', left: 'calc(50% - 900px/2)', top: '1100px', background: '#FFFFFF', borderRadius: '25px', display: 'flex', alignItems: 'center', padding: '0 40px', boxSizing: 'border-box' }}>
-                                    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '56px', color: playerName ? '#1A1A1A' : '#999999' }}>{playerName || texts.nameInput.placeholder}</div>
-                                    <span className="cursor">|</span>
-                                </div>
-                                <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: '1350px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-                                        {keyboardLetters.map(l => (
-                                            <button key={l} onClick={() => setPlayerName(p => (p+l).slice(0,12))} style={{ width: '150px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: '72px', color: '#FFFFFF' }}>{l}</button>
-                                        ))}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '40px', marginTop: '10px' }}>
-                                        <button onClick={() => setPlayerName(p => (p+' ').slice(0,16))} style={{ width: '390px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF' }}>{currentLang==='zh-TW'?'空白':'Space'}</button>
-                                        <button onClick={() => setPlayerName(p => p.slice(0,-1))} style={{ width: '390px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF' }}>{currentLang==='zh-TW'?'刪除':'Delete'}</button>
-                                        <button onClick={beginQuestions} style={{ width: '390px', height: '150px', borderRadius: '30px', border: 'none', background: '#B8860B', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF', boxShadow: '0 0 18px 6px rgba(255,255,255,0.3)' }}>{texts.nameInput.button}</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {texts.questions.map(q => currentPage === q.id && (
-                            <div key={q.id}>
-                                <div style={{ position: 'absolute', width: '1280px', left: '220px', top: '676px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '64px', textAlign: 'center', color: '#FFFFFF' }}>{texts.header.tagline}</div>
-                                <div style={{ position: 'absolute', width: '1400px', height: '48px', left: '160px', top: currentLang === 'en' ? '828px' : '804px', background: '#333', borderRadius: '43px' }}>
-                                    <div style={{ width: `${q.progressWidth}px`, height: '100%', background: '#B8860B', borderRadius: '43px', transition: 'width 0.5s' }}></div>
-                                </div>
-                                <div style={{ position: 'absolute', width: currentLang === 'en' && (q.id === 2 || q.id === 4) ? '1400px' : '1182px', left: currentLang === 'en' && (q.id === 2 || q.id === 4) ? 'calc(50% - 1400px/2)' : 'calc(50% - 1182px/2)', top: currentLang === 'en' ? '1018px' : '994px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#B8860B', whiteSpace: 'pre-line' }}>{q.title}</div>
-                                <div style={{ position: 'absolute', width: '1309px', height: '602px', left: 'calc(50% - 1309px/2)', top: currentLang === 'en' ? '1348px' : '1298px', borderRadius: '25px', overflow: 'hidden' }}>
-                                    <img src={q.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                                <div style={{ position: 'absolute', width: '1449px', left: 'calc(50% - 1449px/2)', top: currentLang === 'en' ? '2047px' : '1997px' }}>
-                                    <img src={iconA} style={{ position: 'absolute', left: '0px', top: '10px', width: '120px', transform: 'scale(1.2)' }} />
-                                    <button onClick={() => handleAnswer(q.options[0].key, q.id === 4)} style={{ position: 'absolute', left: '160px', width: '1288px', height: currentLang === 'en' ? '260px' : '245px', border: '6px solid #FFF', borderRadius: '25px', background: 'transparent' }}>
-                                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '50px' : '70px', padding: '0 10px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{q.options[0].text}</div>
-                                    </button>
-                                </div>
-                                <div style={{ position: 'absolute', width: '1449px', left: 'calc(50% - 1449px/2)', top: currentLang === 'en' ? '2354px' : '2289px' }}>
-                                    <img src={iconB} style={{ position: 'absolute', left: '0px', top: '10px', width: '120px', transform: 'scale(1.2)' }} />
-                                    <button onClick={() => handleAnswer(q.options[1].key, q.id === 4)} style={{ position: 'absolute', left: '160px', width: '1288px', height: currentLang === 'en' ? '260px' : '242px', border: '6px solid #FFF', borderRadius: '25px', background: 'transparent' }}>
-                                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '50px' : '70px', padding: '0 10px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{q.options[1].text}</div>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-
-                        {/* ================================================================================== */}
-                        {/* 🌟 核心修正：Result Page 使用 Flexbox 流動排版，徹底解決重疊與黑畫面問題 🌟 */}
-                        {/* ================================================================================== */}
-                        {currentPage === 'result' && result && (
-                            <div style={{ 
-                                position: 'absolute', width: '100%', height: '100%', 
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                                paddingTop: '366px' /* 保留頂部空間給標題 */
-                            }}>
-                                {/* 1. 問候語 & 標題 (固定位置) */}
-                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>{texts.result.greeting.replace('[姓名]', playerName).replace('[NAME]', playerName)}</div>
-                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '88px' : '105px', textAlign: 'center', color: '#D4AF37', marginBottom: '20px' }}>{texts.result.title}</div>
-                                <div style={{ width: '779px', height: '0', border: '6px solid #D4AF37', marginBottom: '40px' }}></div>
-                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF', marginBottom: '40px' }}>{result.mbtiType} - {result.resultData.category}</div>
-                                
-                                {/* 2. 描述文字 (自動高度) */}
-                                <div style={{ 
-                                    width: currentLang === 'en' ? '1488px' : '1188px', 
-                                    fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '46px' : '55px', 
-                                    textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap', wordWrap: 'break-word',
-                                    marginBottom: '60px' /* 與下方黃色標題的間距 */
-                                }}>
-                                    {result.resultData.desc}
-                                </div>
-                                
-                                {/* 3. 黃色推薦標題 */}
-                                <div style={{ 
-                                    width: '1412px', height: '115px', background: '#D4AF37', borderRadius: '25px 25px 0 0', 
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                    fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '54px' : '64px', color: '#FFFFFF',
-                                    flexShrink: 0
-                                }}>
-                                    {texts.result.recommendation}
-                                </div>
-                                
-                                {/* 4. 產品容器 (包住 Tag 和 卡片) */}
-                                <div style={{ 
-                                    width: '1412px', boxSizing: 'border-box', border: '6px solid #D4AF37', borderRadius: '0 0 25px 25px',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 70px'
-                                }}>
-                                    {/* 香調 Tags */}
-                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px' }}>
-                                        {result.resultData.fragrance.split(' / ').map((tag, i) => (
-                                            <div key={i} style={{ padding: '19px 52px', height: '148px', background: '#D4AF37', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '70px', color: '#FFFFFF', boxSizing: 'border-box' }}>{tag.trim()}</div>
-                                        ))}
-                                    </div>
-
-                                    {/* 產品卡片 Row */}
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%' }}>
-                                        {result.resultData.products.map((p, i) => (
-                                            <div key={i} style={{ width: '482px', background: '#D4AF37', borderRadius: '25px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                <div style={{ width: '458px', height: '458px', borderRadius: '25px', overflow: 'hidden', display:'flex', alignItems:'center', justifyContent:'center', background:'#FFF', marginBottom: '20px', flexShrink: 0 }}>
-                                                    <img src={p.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                </div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '40px' : '45px', color: '#FFFFFF', marginTop: '10px', textAlign: 'center' }}>{p.brand}</div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '48px' : '55px', color: '#FFFFFF', margin: '10px 0', textAlign: 'center' }}>{p.name}</div>
-                                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '36px' : '40px', lineHeight: '1.2', color: '#FFFFFF', padding: '20px 0', textAlign: 'center', whiteSpace: 'pre-wrap', wordWrap: 'break-word', flex: 1 }}>{p.description}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* 5. 底部按鈕 (自動流動，與上方保持間距) */}
-                                {!isShareMode && (
-                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '50px', marginBottom: '100px' }}>
-                                        <button onClick={restartQuiz} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#D4AF37', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#FFFFFF' }}>{texts.restart}</button>
-                                        <button onClick={goToSharePage} style={{ width: currentLang === 'en' ? '640px' : '540px', height: '123px', background: '#FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '70px', color: '#D4AF37' }}>{texts.share}</button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {currentPage === 'share' && (
-                            <>
-                                <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.shareQR.title}</div>
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '880px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF' }}>{texts.shareQR.subtitle}</div>
-                                <div style={{ position: 'absolute', width: '600px', height: '600px', left: 'calc(50% - 600px/2)', top: '1100px', background: '#FFFFFF', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <QRCodeComp value={shareUrl} size={500} />
-                                </div>
-                                <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '1800px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '42px' : '44px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{texts.shareQR.instruction}</div>
-                                <button onClick={backToResultPage} style={{ position: 'absolute', width: currentLang === 'en' ? '800px' : '600px', height: '150px', left: currentLang === 'en' ? 'calc(50% - 800px/2)' : 'calc(50% - 600px/2)', bottom: '220px', background: '#B8860B', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '72px', color: '#FFFFFF' }}>{texts.shareQR.backButton}</button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+          {/* Result Page */}
+          {currentPage === 'result' && result && (
+            <div className="pt-[50px] border-t-[3px] border-[#555] text-center">
+              <h2 
+                className="text-[120px] text-[#B8860B] mb-[40px]"
+                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 500 }}
+              >
+                🎉 你的專屬奢華香調：
+                <br />
+                <span className="text-[90px]">{result.resultData.category}</span>
+                <br />
+                <span className="text-[70px] font-normal">(推測類型 {result.mbtiType})</span>
+              </h2>
+              <p className="text-[60px] leading-[1.6] text-[#C0C0C0] mb-[60px]">
+                {result.resultData.desc}
+              </p>
+              <div className="bg-[#252525] border-4 border-[#B8860B] rounded-[15px] p-[80px] mt-[50px]">
+                <strong 
+                  className="text-[#B8860B] text-[75px] block mb-[30px]"
+                  style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif" }}
+                >
+                  ⚜️ 你的【SCENTATION】推薦香調家族：
+                </strong>
+                <p className="text-[65px] text-[#E0E0E0]" style={{ fontWeight: 300 }}>
+                  {result.resultData.fragrance}
+                </p>
+              </div>
+              <button
+                onClick={restartQuiz}
+                className="mt-[100px] px-[100px] py-[50px] bg-[#B8860B] text-[#121212] border-none rounded-[10px] cursor-pointer text-[70px] tracking-[5px] transition-colors hover:bg-[#D4AF37]"
+                style={{ fontFamily: "'Lantinghei SC', '兰亭黑-简', 'Inter', sans-serif", fontWeight: 'bold' }}
+              >
+                重新探索
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

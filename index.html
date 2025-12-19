@@ -1,319 +1,307 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCENTATION 奢華香調探索：MBTI 測試</title>
+    <title>SCENTATION - 探索您的香氣密碼</title>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/qrcode.react@3.1.0/dist/qrcode.react.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display&display=swap" rel="stylesheet">
+    
     <style>
-        /* SCENTATION 基礎風格：奢華、簡約、優雅 */
         body {
-            font-family: 'Times New Roman', serif; /* 經典襯線字體，增加奢華感 */
-            background-color: #f7f7f7; /* 淺灰背景 */
-            color: #333;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+            padding: 0;
+            overflow: hidden;
+            background-color: #1A1A1A; /* 基礎底色防止閃白 */
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
         }
-
-        /* 主容器樣式 */
-        .quiz-container {
-            width: 100%;
-            max-width: 550px;
-            background: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 柔和陰影 */
-            border-radius: 12px;
-            padding: 30px 40px;
-            text-align: center;
+        #root {
+            width: 2160px;
+            height: 3840px;
         }
-
-        /* 標題與品牌元素 */
-        .header {
-            border-bottom: 2px solid #D4AF37; /* 奢華金色分割線 */
-            padding-bottom: 15px;
-            margin-bottom: 30px;
+        .app-container {
+            width: 2160px;
+            height: 3840px;
+            position: relative;
         }
-
-        .header h1 {
-            font-family: Georgia, serif;
-            font-size: 2.2em;
-            color: #4B0082; /* 深紫色，代表神秘與奢華 */
-            margin: 0;
-            letter-spacing: 2px;
-        }
-
-        .header p {
-            font-style: italic;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* 問題區域 */
-        .question-section {
-            display: none;
-            text-align: left;
-            min-height: 200px; /* 確保內容不會跳動 */
-        }
-
-        .question-section.active {
-            display: block;
-        }
-
-        .question-section h2 {
-            font-size: 1.4em;
-            color: #4B0082;
-            margin-bottom: 25px;
-        }
-
-        /* 選項按鈕樣式 */
-        .option-button {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            text-align: left;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .option-button:hover {
-            background-color: #e0e0e0;
-            border-color: #D4AF37; /* hover 時出現金色邊框 */
-        }
-
-        .option-button:focus {
-            outline: none;
-            background-color: #f5f5f5;
-            border-color: #4B0082; /* 選擇時深紫色邊框 */
-        }
-
-        /* 結果展示區 */
-        #result-section {
-            display: none;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        #result-section h2 {
-            font-size: 1.8em;
-            color: #D4AF37; /* 金色標題 */
-            margin-bottom: 15px;
-        }
-
-        #result-section p {
-            font-size: 1.1em;
-            line-height: 1.6;
-            color: #555;
-            margin-bottom: 20px;
-        }
-
-        .scentation-suggestion {
-            background-color: #FFFACD; /* 淺奶油色背景 */
-            border: 2px solid #D4AF37;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            font-weight: bold;
-            color: #4B0082;
-        }
-
-        .scentation-suggestion strong {
-            color: #D4AF37;
-            font-size: 1.2em;
-            display: block;
-            margin-top: 5px;
-        }
-
-        /* 重啟按鈕 */
-        #restart-button {
-            margin-top: 30px;
-            padding: 10px 25px;
-            background-color: #4B0082;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s;
-        }
-
-        #restart-button:hover {
-            background-color: #D4AF37;
-            color: #4B0082;
-        }
+        /* 隱藏滾動條但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<div class="quiz-container">
-    <div class="header">
-        <h1>SCENTATION</h1>
-        <p>奢華香調探索：發掘你的 MBTI 香氣潛能</p>
-    </div>
+    <script type="text/babel">
+        const { useState, useCallback, useEffect, useMemo } = React;
+        const QRCodeCanvas = QRCodeReact.QRCodeCanvas;
 
-    <div id="q1" class="question-section active">
-        <h2>1/4 🔮 你的決策傾向？</h2>
-        <button class="option-button" onclick="nextQuestion('q2', 'N')">A. 我依靠直覺和宏觀的願景，注重概念和可能性。</button>
-        <button class="option-button" onclick="nextQuestion('q2', 'S')">B. 我相信實際的證據和經驗，專注於細節和當下。</button>
-    </div>
+        // =========================================================
+        // 1. 圖片與資料結構定義 (修正路徑與補完)
+        // =========================================================
+        const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/iconA.png';
+        const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/IconB.png';
+        const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_A4.png';
 
-    <div id="q2" class="question-section">
-        <h2>2/4 💼 你的工作模式？</h2>
-        <button class="option-button" onclick="nextQuestion('q3', 'J')">A. 喜歡有計劃、有條理地完成任務，重視結構和截止日期。</button>
-        <button class="option-button" onclick="nextQuestion('q3', 'P')">B. 偏愛靈活、開放的工作方式，在變化中尋找新的可能性。</button>
-    </div>
+        const productImages = {
+            NT_Aventus: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Aventus%20Collection-Aventus_edp.jpg',
+            NT_SilverMountainWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Silver%20Mountain%20Water_edp.jpg',
+            NT_ForHimBleuNoir: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Him%20Bleu%20Noir_edp.jpg',
+            NF_Ani: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Ani_Extrait.jpg',
+            NF_Nanshe: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nishane_Nanshe_Extrait.jpg',
+            NF_Lira: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Casamorati%20-%20Lira_edp.jpg',
+            NF_Zik: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_blackfades_zik.jpg',
+            SJ_ForHerEDT: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_narciso%20rodriguez_For%20Her_edt.jpg',
+            SJ_Buongiorno: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Acqua%20di%20Parma_Buongiorno_edp.jpg',
+            SJ_Torino23: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Xerjoff_Torino%2023_edp.jpg',
+            SP_HardLeather: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_LM%20Parfums_Hard%20Leather_Extrait%20de%20parfum.jpg',
+            SP_BlackAfgano: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Nasomatto_Black%20Afgano_Extrait%20de%20parfum.jpg',
+            SP_VirginIslandWater: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_Creed_Virgin%20Island%20Water_edp.jpg',
+            SP_Wandervogel: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/k11%20musea%20product%20image_27%2087_Wandervogel_edp.jpg',
+        };
 
-    <div id="q3" class="question-section">
-        <h2>3/4 🧭 你的個人目標？</h2>
-        <button class="option-button" onclick="nextQuestion('q4', 'T')">A. 追求掌握知識、邏輯分析，目標是建立高效、創新的系統。</button>
-        <button class="option-button" onclick="nextQuestion('q4', 'F')">B. 追求和諧、價值觀和意義，目標是建立深刻、有同理心的連結。</button>
-    </div>
+        const calcMbti = (answers) => {
+            const counts = { N: 0, S: 0, T: 0, F: 0, J: 0, P: 0, E: 0, I: 0 };
+            answers.forEach(ans => {
+                if (ans.question === 1) ans.answer === 'A' ? counts.N++ : counts.S++;
+                if (ans.question === 2) ans.answer === 'A' ? counts.T++ : counts.F++;
+                if (ans.question === 3) ans.answer === 'A' ? counts.J++ : counts.P++;
+                if (ans.question === 4) ans.answer === 'A' ? counts.E++ : counts.I++;
+            });
+            return [
+                counts.E >= counts.I ? 'E' : 'I',
+                counts.N >= counts.S ? 'N' : 'S',
+                counts.T >= counts.F ? 'T' : 'F',
+                counts.J >= counts.P ? 'J' : 'P'
+            ].join('');
+        };
 
-    <div id="q4" class="question-section">
-        <h2>4/4 ✨ 你的能量來源？</h2>
-        <button class="option-button" onclick="calculateResult('E')">A. 從外部世界、社交互動中獲得動力和活力。</button>
-        <button class="option-button" onclick="calculateResult('I')">B. 從內心世界、獨自沉思中獲得專注和能量。</button>
-    </div>
+        const getCategoryKey = (mbti) => {
+            if (mbti.includes('N') && mbti.includes('T')) return 'NT';
+            if (mbti.includes('N') && mbti.includes('F')) return 'NF';
+            if (mbti.includes('S') && mbti.includes('J')) return 'SJ';
+            if (mbti.includes('S') && mbti.includes('P')) return 'SP';
+            return 'NT';
+        };
 
-    <div id="result-section">
-        <h2>🎉 你的專屬奢華香調：<span id="mbti-type"></span></h2>
-        <p id="mbti-category-desc"></p>
-        <div class="scentation-suggestion">
-            <p><strong>⚜️ 你的【SCENTATION】推薦香調家族：</strong></p>
-            <p id="fragrance-family"></p>
-        </div>
-        <button id="restart-button" onclick="restartQuiz()">重新測試</button>
-    </div>
+        // =========================================================
+        // 2. 語系與內容實體資料 (修正語法錯誤)
+        // =========================================================
+        const zh_TW_Content = {
+            intro: {
+                title: '探索您的香氣密碼',
+                description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。\n迅速剖析核心人格特質，精準推薦最能彰顯您個人魅力的香調。',
+                button: '按此啟動 探索香氣',
+            },
+            nameInput: {
+                title: '請輸入您的姓名',
+                subtitle: '讓我們為您量身打造香氣體驗',
+                placeholder: '輸入姓名',
+                button: '開始測試',
+            },
+            header: { tagline: '為您的非凡風格，尋覓您的品味哲學。' },
+            exit: '✕', restart: '重新探索', share: '分享結果',
+            result: { title: '你的香氣個性', recommendation: 'SCENTATION 為您推薦的香調' },
+            shareQR: { title: '分享您的香氣個性', subtitle: '掃描 QR Code 獲取可分享的結果圖片', instruction: '使用手機掃描下方 QR Code，\n即可在社交媒體上分享您的專屬香氣結果', backButton: '返回結果頁面' },
+            resultsMap: {
+                NT: { category: '分析家', desc: '作為邏輯至上、追求效率與複雜性的分析家。', fragrance: '木質調 / 西普調 / 芳香調', products: [
+                    { brand: 'Creed', name: 'Aventus', image: productImages.NT_Aventus, description: '擅長統籌全局與制定策略的你...' },
+                    { brand: 'Narciso Rodriguez', name: 'Bleu Noir', image: productImages.NT_ForHimBleuNoir, description: '穩重克制背後的邏輯與深度...' }
+                ]},
+                NF: { category: '外交官', desc: '作為情緒豐富的外交官，您需要具有敘事感的香氣。', fragrance: '東方調 / 花香調', products: [
+                    { brand: 'Nishane', name: 'Ani', image: productImages.NF_Ani, description: '這支香水像一個循序漸進的擁抱...' },
+                    { brand: 'BLACK FADES', name: '夕 (zik6)', image: productImages.NF_Zik, description: '留下專屬於自己、不被打擾的 me-time。' }
+                ]},
+                SJ: { category: '守護者', desc: '作為守護者，您偏愛清晰穩定且專業的香氣。', fragrance: '柑橘調 / 清新麝香', products: [
+                    { brand: 'Narciso Rodriguez', name: 'For Her EDT', image: productImages.SJ_ForHerEDT, description: '重視穩定、乾淨與可信度。' },
+                    { brand: 'Xerjoff', name: 'Torino 23', image: productImages.SJ_Torino23, description: '保持同樣得體而不呆板的形象。' }
+                ]},
+                SP: { category: '探險家', desc: '作為探險家，您需要充滿活力且極具個人色彩。', fragrance: '皮革調 / 辛辣調', products: [
+                    { brand: 'Nasomatto', name: 'Black Afgano', image: productImages.SP_BlackAfgano, description: '打破他人對你的既定印象。' },
+                    { brand: '27 87', name: 'Wandervogel', image: productImages.SP_Wandervogel, description: '帶著一點未來感與實驗氣質。' }
+                ]}
+            },
+            questions: [
+                { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、抽象概念與聯想空間。'}, { key: 'S', text: '作品的材質、精準技法與生動色彩表現。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/1.png', progressWidth: 366 },
+                { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜，散發專業氣場。'}, { key: 'F', text: '柔化氛圍，創造暖心空間與人際連結。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/2.png', progressWidth: 692 },
+                { id: 3, title: '關於您的香氛收藏，哪個描述最貼切？', options: [{ key: 'J', text: '會根據場合與計劃進行精準的分類選擇。'}, { key: 'P', text: '隨心所欲地使用，喜歡即興疊香的驚喜。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/3.png', progressWidth: 1081 },
+                { id: 4, title: '週末晚上，您渴望散發哪一種香氣風格？', options: [{ key: 'E', text: '濃郁且張揚，希望成為社交聚會的焦點。'}, { key: 'I', text: '內斂且有層次，只為自我鑑賞而保留。'}], image: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/4.png', progressWidth: 1400 }
+            ]
+        };
 
-</div>
+        const translations = { 'zh-TW': zh_TW_Content, 'en': zh_TW_Content }; // 簡化為共用同資料
 
-<script>
-    // 儲存 MBTI 四個維度的得分 (N/S, J/P, T/F, E/I)
-    let score = { 'N': 0, 'S': 0, 'J': 0, 'P': 0, 'T': 0, 'F': 0, 'E': 0, 'I': 0 };
-    let currentQuestion = 1;
-    const totalQuestions = 4;
-    let mbtiResult = '';
+        // =========================================================
+        // 3. UI 組件
+        // =========================================================
+        const ResultPage = ({ result, playerName, currentLang, restartQuiz, goToSharePage }) => {
+            const texts = translations[currentLang];
+            const data = result.resultData;
 
-    // MBTI 四大類與香調結果對應表
-    const resultsMap = {
-        // N_T_
-        'NT': {
-            category: '一、分析家 (The Analysts)',
-            desc: '作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸，偏愛能激發思考或帶有神秘感的氣味。您的香氣必須展現出獨特的品味與智慧。',
-            fragrance: '🪶 木質調 (Woody) / 🌲 西普調 (Chypre) / 🌿 芳香調 (Aromatic)'
-        },
-        // N_F_
-        'NF': {
-            category: '二、外交家 (The Diplomats)',
-            desc: '作為情感豐富、注重人際連結的外交家，您需要溫暖、具有深度和故事感的香氣。您的香氣將在繁忙中尋求情感支持，或在社交中散發親切魅力。',
-            fragrance: '🔥 東方調 (Oriental / Amber) / 🌸 花香調 (Floral) / 🧁 美食調 (Gourmand)'
-        },
-        // S_J_
-        'SJ': {
-            category: '三、守衛者 (The Sentinels)',
-            desc: '作為務實可靠、遵循規則的守衛者，您偏愛清晰、可靠、不過分張揚的「安全」香氣。您的香氣必須完美過關，帶來安心感和專業感。',
-            fragrance: '👔 馥奇調 (Fougere) / 🧼 潔淨麝香調 (Clean Musk) / 🍊 柑橘調 (Citrus)'
-        },
-        // S_P_
-        'SP': {
-            category: '四、探險家 (The Explorers)',
-            desc: '作為活在當下、熱愛自由與刺激的探險家，您需要充滿活力、動感或帶有強烈個性的香氣。您的香氣應反映快節奏的生活和外向的個性。',
-            fragrance: '🧥 皮革調 (Leather) / 🌶️ 辛香調 (Spicy) / 🌊 水生調 (Aquatic)'
+            return (
+                <div className="absolute inset-0 overflow-y-auto no-scrollbar pt-[380px] pb-40 px-20">
+                    <div className="text-center">
+                        <p className="text-white text-[56px] mb-6">親愛的 {playerName},</p>
+                        <h1 className="text-[#D4AF37] text-[100px] font-bold mb-8 uppercase tracking-tighter">{texts.result.title}</h1>
+                        <div className="w-[800px] border-t-4 border-[#D4AF37] mx-auto mb-10 opacity-50"></div>
+                        <h2 className="text-white text-[120px] font-bold mb-10 tracking-widest">{result.mbtiType}</h2>
+                        <p className="text-white text-[48px] px-20 mb-20 leading-relaxed opacity-90">{data.desc}</p>
+                    </div>
+
+                    <div className="w-[1500px] mx-auto bg-black/40 rounded-[40px] border-2 border-[#D4AF37]/30 p-16 mb-20">
+                        <div className="text-[#D4AF37] text-center text-[60px] font-bold mb-12">{texts.result.recommendation}</div>
+                        <div className="flex justify-center gap-6 mb-16">
+                            {data.fragrance.split('/').map((tag, i) => (
+                                <span key={i} className="bg-[#B8860B] text-white text-[48px] px-10 py-4 rounded-full font-bold">{tag.trim()}</span>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-16">
+                            {data.products.map((p, i) => (
+                                <div key={i} className="bg-white/5 rounded-[30px] p-8 flex flex-col items-center border border-white/10">
+                                    <div className="w-[500px] h-[500px] bg-white rounded-2xl mb-8 flex items-center justify-center p-6 overflow-hidden">
+                                        <img src={p.image} className="max-w-full max-h-full object-contain" />
+                                    </div>
+                                    <p className="text-[#B8860B] text-[40px] font-bold uppercase">{p.brand}</p>
+                                    <p className="text-white text-[50px] font-bold mb-6">{p.name}</p>
+                                    <p className="text-white/70 text-[34px] text-center leading-snug">{p.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-center gap-10">
+                        <button onClick={restartQuiz} className="w-[600px] h-[160px] bg-[#B8860B] text-white text-[64px] font-bold rounded-[30px] shadow-lg">重新開始</button>
+                        <button onClick={goToSharePage} className="w-[600px] h-[160px] bg-white text-[#B8860B] text-[64px] font-bold rounded-[30px] shadow-lg">分享結果</button>
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [currentPage, setCurrentPage] = useState('intro');
+            const [currentLang, setCurrentLang] = useState('zh-TW');
+            const [playerName, setPlayerName] = useState('');
+            const [answers, setAnswers] = useState([]);
+            const [result, setResult] = useState(null);
+
+            const texts = translations[currentLang];
+            const keyboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+            const handleAnswer = (qId, key, isLast) => {
+                const newAnswers = [...answers, { question: qId, answer: key }];
+                setAnswers(newAnswers);
+                if (isLast) {
+                    const mbti = calcMbti(newAnswers);
+                    setResult({ mbtiType: mbti, resultData: texts.resultsMap[getCategoryKey(mbti)] });
+                    setCurrentPage('result');
+                } else {
+                    setCurrentPage(qId + 1);
+                }
+            };
+
+            const restartQuiz = () => {
+                setAnswers([]);
+                setResult(null);
+                setPlayerName('');
+                setCurrentPage('intro');
+            };
+
+            return (
+                <div className="app-container overflow-hidden">
+                    {/* 背景底圖 */}
+                    <div className="absolute inset-0">
+                        <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/pattern.png" className="w-full h-full object-cover" />
+                    </div>
+
+                    {/* 黑色半透明主框架 */}
+                    <div className="absolute left-[180px] top-[180px] w-[1800px] h-[3480px] bg-gradient-to-b from-[#1A1A1A]/95 to-[#2B2B2B]/95 rounded-[60px] shadow-[0px_0px_100px_rgba(212,175,55,0.4)] border border-[#D4AF37]/20 overflow-hidden">
+                        
+                        {/* 頂部 Logo */}
+                        <div className="flex justify-center pt-24 pb-12">
+                            <img src={logoImage} className="w-[800px] object-contain drop-shadow-lg" />
+                        </div>
+
+                        {/* 退出按鈕 */}
+                        {currentPage !== 'intro' && (
+                            <button onClick={restartQuiz} className="absolute left-16 top-16 w-32 h-32 rounded-full border-4 border-[#B8860B] text-[#B8860B] text-6xl flex items-center justify-center font-bold">✕</button>
+                        )}
+
+                        {/* 畫面渲染切換 */}
+                        {currentPage === 'intro' && (
+                            <div className="flex flex-col items-center pt-32 px-20 text-center">
+                                <div className="text-[#D4AF37] text-[60px] mb-12 uppercase tracking-[10px]">{texts.header.tagline}</div>
+                                <h1 className="text-[#D4AF37] text-[140px] font-bold mb-16 leading-tight">{texts.intro.title}</h1>
+                                <p className="text-white/80 text-[48px] mb-24 max-w-[1400px] leading-relaxed whitespace-pre-line">{texts.intro.description}</p>
+                                <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png" className="w-[1200px] h-[1000px] object-cover rounded-[50px] shadow-2xl border-4 border-[#D4AF37]/30 mb-32" />
+                                <button onClick={() => setCurrentPage('nameInput')} className="w-[1000px] h-[240px] bg-[#B8860B] text-white text-[100px] font-bold rounded-full shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-pulse">按此啟動</button>
+                            </div>
+                        )}
+
+                        {currentPage === 'nameInput' && (
+                            <div className="flex flex-col items-center pt-64">
+                                <h2 className="text-[#D4AF37] text-[120px] font-bold mb-8">{texts.nameInput.title}</h2>
+                                <p className="text-white/60 text-[56px] mb-24">{texts.nameInput.subtitle}</p>
+                                <div className="w-[1000px] h-40 bg-white rounded-[30px] flex items-center justify-center text-[80px] font-bold text-black mb-32 shadow-inner">
+                                    {playerName || <span className="text-gray-300">TYPE NAME</span>}
+                                </div>
+                                <div className="w-[1400px] flex flex-wrap justify-center gap-6">
+                                    {keyboard.map(l => (
+                                        <button key={l} onClick={() => playerName.length < 12 && setPlayerName(p => p + l)} className="w-[160px] h-[160px] bg-white/10 border-2 border-[#D4AF37]/50 text-white text-7xl rounded-3xl active:bg-[#B8860B]">{l}</button>
+                                    ))}
+                                    <button onClick={() => setPlayerName(p => p.slice(0, -1))} className="w-[340px] h-[160px] bg-red-900/40 border-2 border-red-500/50 text-white text-5xl rounded-3xl">DELETE</button>
+                                    <button onClick={() => playerName && setCurrentPage(1)} className="w-[340px] h-[160px] bg-green-700/60 border-2 border-green-500/50 text-white text-5xl rounded-3xl font-bold">START</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {typeof currentPage === 'number' && (
+                            <div className="flex flex-col items-center pt-40 px-20">
+                                <div className="w-[1400px] h-6 bg-white/10 rounded-full mb-32 overflow-hidden border border-white/5">
+                                    <div className="h-full bg-gradient-to-r from-[#B8860B] to-[#D4AF37] transition-all duration-700" style={{width: `${(currentPage/4)*100}%`}}></div>
+                                </div>
+                                <h2 className="text-[#D4AF37] text-[100px] font-bold text-center mb-24 leading-tight h-[300px] flex items-center">{texts.questions[currentPage-1].title}</h2>
+                                <img src={texts.questions[currentPage-1].image} className="w-[1400px] h-[800px] object-cover rounded-[50px] mb-32 shadow-2xl border-2 border-[#D4AF37]/20" />
+                                <div className="flex flex-col gap-12 w-[1400px]">
+                                    {texts.questions[currentPage-1].options.map(opt => (
+                                        <button key={opt.key} onClick={() => handleAnswer(currentPage, opt.key, currentPage === 4)} className="w-full min-h-[260px] border-4 border-white/20 bg-white/5 rounded-[40px] text-white text-[60px] flex items-center justify-center text-center px-16 py-8 active:bg-[#B8860B] active:border-[#B8860B] transition-colors leading-snug">
+                                            {opt.text}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {currentPage === 'result' && (
+                            <ResultPage result={result} playerName={playerName} currentLang={currentLang} restartQuiz={restartQuiz} goToSharePage={() => setCurrentPage('share')} />
+                        )}
+
+                        {currentPage === 'share' && (
+                            <div className="flex flex-col items-center pt-80 px-20">
+                                <h2 className="text-[#D4AF37] text-[130px] font-bold mb-10 uppercase tracking-tighter">SHARE</h2>
+                                <p className="text-white/80 text-[60px] text-center mb-24">掃描二維碼獲取您的香氣名片</p>
+                                <div className="bg-white p-20 rounded-[60px] shadow-[0_0_100px_rgba(255,255,255,0.2)] mb-24">
+                                    <QRCodeCanvas value={`https://scentation.com/share?name=${playerName}&type=${result.mbtiType}`} size={700} />
+                                </div>
+                                <button onClick={() => setCurrentPage('result')} className="w-[800px] h-[180px] bg-white/10 border-4 border-[#B8860B] text-[#B8860B] text-[72px] font-bold rounded-full">返回結果</button>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
         }
-    };
 
-    /**
-     * 處理點擊選項並切換到下一題
-     * @param {string} nextId - 下一題的 DOM ID
-     * @param {string} scoreKey - 要增加得分的 MBTI 字母 (N, S, J, P, T, F, E, I)
-     */
-    function nextQuestion(nextId, scoreKey) {
-        score[scoreKey]++; // 記錄分數
-
-        // 隱藏當前問題
-        document.getElementById(`q${currentQuestion}`).classList.remove('active');
-        currentQuestion++;
-
-        // 顯示下一題
-        const nextQ = document.getElementById(nextId);
-        if (nextQ) {
-            nextQ.classList.add('active');
-        }
-    }
-
-    /**
-     * 計算最終結果並顯示
-     * @param {string} scoreKey - 最後一題的得分 (E 或 I)
-     */
-    function calculateResult(scoreKey) {
-        score[scoreKey]++; // 記錄最後一題分數
-
-        // 判斷四大類的核心維度
-        // N vs S
-        const N_S = score['N'] > score['S'] ? 'N' : 'S';
-        // J vs P
-        const J_P = score['J'] > score['P'] ? 'J' : 'P';
-        // T vs F
-        const T_F = score['T'] > score['F'] ? 'T' : 'F';
-        // E vs I (此處用於顯示完整 MBTI，不影響四大類判斷)
-        const E_I = score['E'] > score['I'] ? 'E' : 'I';
-
-        // 組合四大類關鍵碼 (NT, NF, SJ, SP)
-        const categoryKey = N_S + T_F; // N_T_ / N_F_ / S_T_ / S_F_
-        // T vs F 是第三個字母，但其結果與 N/S 組合判斷四大類 (NT, NF, ST, SF)
-
-        // S_T_ 屬於 SP 探險家 (ISTP, ESTP)
-        if (categoryKey === 'ST') {
-            finalKey = 'SP';
-        } 
-        // S_F_ 屬於 SJ 守衛者 (ISFJ, ESFJ)
-        else if (categoryKey === 'SF') {
-            finalKey = 'SJ';
-        }
-        // N_T_ 屬於 NT 分析家 (INTJ, ENTJ)
-        else if (categoryKey === 'NT') {
-            finalKey = 'NT';
-        }
-        // N_F_ 屬於 NF 外交家 (INFJ, ENFJ)
-        else if (categoryKey === 'NF') {
-            finalKey = 'NF';
-        }
-        
-        const result = resultsMap[finalKey];
-
-        // 顯示完整 MBTI 類型 (僅作參考，四大類才是香調核心)
-        mbtiResult = E_I + N_S + T_F + J_P;
-
-        // 更新結果區的內容
-        document.getElementById('mbti-type').textContent = `${result.category} (接近 ${mbtiResult})`;
-        document.getElementById('mbti-category-desc').textContent = result.desc;
-        document.getElementById('fragrance-family').textContent = result.fragrance;
-
-        // 隱藏問題區，顯示結果區
-        document.getElementById(`q${currentQuestion}`).classList.remove('active');
-        document.getElementById('result-section').style.display = 'block';
-    }
-
-    /**
-     * 重置測驗
-     */
-    function restartQuiz() {
-        // 重置分數和狀態
-        score = { 'N': 0, 'S': 0, 'J': 0, 'P': 0, 'T': 0, 'F': 0, 'E': 0, 'I': 0 };
-        currentQuestion = 1;
-        
-        // 隱藏結果區，顯示第一道問題
-        document.getElementById('result-section').style.display = 'none';
-        document.getElementById('q1').classList.add('active');
-    }
-</script>
-
+        // 啟動渲染
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>

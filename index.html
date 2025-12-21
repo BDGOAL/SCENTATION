@@ -15,6 +15,7 @@
 
 * { box-sizing: border-box; }
 
+/* 全局設定 */
 body, html {
     margin: 0; padding: 0;
     background-color: #1A1A1A;
@@ -23,6 +24,7 @@ body, html {
     overflow: hidden;
 }
 
+/* 內容主容器 */
 #root { 
     width: 2160px; height: 3840px; 
     background-color: #1A1A1A;
@@ -33,6 +35,7 @@ button { cursor: pointer; transition: opacity 0.1s; }
 button:active { opacity: 0.8; }
 button:focus { outline: none; }
 
+/* 載入畫面 */
 #loading {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #1A1A1A; color: #B8860B;
@@ -41,6 +44,7 @@ button:focus { outline: none; }
     z-index: 9999;
 }
 
+/* 錯誤提示 */
 #fatal-error {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.9); color: #ff5555; z-index: 100000;
@@ -66,6 +70,7 @@ button:focus { outline: none; }
 const { useState, useCallback, useEffect, useRef } = React;
 const getBaseUrl = () => window.location.href.split('?')[0];
 
+// --- 排版引擎 ---
 const updateLayout = () => {
     const root = document.getElementById('root');
     const body = document.body;
@@ -107,13 +112,16 @@ window.addEventListener('load', updateLayout);
 window.addEventListener('resize', updateLayout);
 setTimeout(updateLayout, 300);
 
-// MBTI 資料庫 - 完整16種類型 (保持不變，省略以節省空間)
+// ============================================================================
+// 🌟 完整 16 種 MBTI 資料庫 🌟
+// ============================================================================
+
 const mbtiResults = {
     INTJ: {
         category: "INTJ",
         nicknameCN: "建築師",
         nicknameEN: "The Architect",
-        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_INTJ.jpg",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTJ.png",
         backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INTJ_BG.png",
         sloganCN: "「策略與邏輯，是我解讀世界的語言。」",
         sloganEN: "\"Strategy and logic are my language for understanding the world.\"",
@@ -122,25 +130,457 @@ const mbtiResults = {
         fragranceCN: "木質調 / 西普調 / 芳香調",
         fragranceEN: "Woody / Chypre / Aromatic",
         products: [
-            { brand: "Creed", name: "Aventus", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg", descriptionCN: "擅長統籌全局與制定策略的你，會被 Aventus 那種煙燻菠蘿配合乾燥木質的結構吸引。這支香水不流於表面的甜美，而是以深度與力量，映照你的判斷力與清晰的企圖心。", descriptionEN: "If you enjoy organizing complex situations into clear plans, Aventus' smoky pineapple with dry woody structure amplifies your well-planned and ambitious side." },
-            { brand: "Creed", name: "Silver Mountain Water", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg", descriptionCN: "習慣在複雜情境中保持距離與冷靜思考的人，會欣賞 Silver Mountain Water 冷冽茶香與金屬感山泉氣息的克制感。", descriptionEN: "If you prefer maintaining distance and perspective, this metallic cold tea scent makes you appear calmer and smarter." }
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "擅長統籌全局與制定策略的你，會被 Aventus 那種煙燻菠蘿配合乾燥木質的結構吸引。這支香水不流於表面的甜美，而是以深度與力量，映照你的判斷力與清晰的企圖心。",
+                descriptionEN: "If you enjoy organizing complex situations into clear plans, Aventus' smoky pineapple with dry woody structure amplifies your well-planned and ambitious side."
+            },
+            {
+                brand: "Creed",
+                name: "Silver Mountain Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg",
+                descriptionCN: "習慣在複雜情境中保持距離與冷靜思考的人，會欣賞 Silver Mountain Water 冷冽茶香與金屬感山泉氣息的克制感。",
+                descriptionEN: "If you prefer maintaining distance and perspective, this metallic cold tea scent makes you appear calmer and smarter."
+            }
         ]
     },
-    INTP: { category: "INTP", nicknameCN: "邏輯學家", nicknameEN: "The Logician", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_INTP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INTP_BG.png", sloganCN: "「在概念的迷宮中，我尋找真理的出口。」", sloganEN: "\"In the labyrinth of concepts, I seek the exit of truth.\"", rationaleCN: "作為追求知識與理論的思考者，您喜歡抽象且富有層次的氣味。您的香氣應該反映您對探索未知的熱情與好奇心。", rationaleEN: "As a knowledge and theory-seeking thinker, you enjoy abstract and layered scents that reflect your passion for exploring the unknown.", fragranceCN: "木質調 / 辛香調 / 芳香調", fragranceEN: "Woody / Spicy / Aromatic", products: [{ brand: "Narciso Rodriguez", name: "For Him Bleu Noir", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg", descriptionCN: "話不多、但每一句都經過思考的性格，與 Bleu Noir 內斂辛香與木質麝香的氣質非常相襯。", descriptionEN: "If you're not naturally talkative, Bleu Noir's dark woody musk makes your silence deep rather than lacking presence." }, { brand: "Creed", name: "Silver Mountain Water", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg", descriptionCN: "冷冽茶香與金屬感山泉氣息，呼應您理性且純淨的思考方式。", descriptionEN: "Cold tea and metallic spring water scent echoes your rational and pure thinking." }] },
-    ENTJ: { category: "ENTJ", nicknameCN: "指揮官", nicknameEN: "The Commander", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ENTJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENTJ_BG.png", sloganCN: "「領導不是權力，而是責任與遠見。」", sloganEN: "\"Leadership is not power, but responsibility and vision.\"", rationaleCN: "作為天生的領導者，您需要強大、自信且令人難忘的香氣。您的香水應該展現您的決斷力和影響力。", rationaleEN: "As a natural leader, you need powerful, confident, and memorable scents that showcase your decisiveness and influence.", fragranceCN: "木質調 / 辛香調 / 皮革調", fragranceEN: "Woody / Spicy / Leather", products: [{ brand: "Creed", name: "Aventus", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg", descriptionCN: "Aventus 的煙燻菠蘿與木質結構，完美呼應您統籌全局的領導風範。", descriptionEN: "Aventus' smoky pineapple and woody structure perfectly echo your commanding leadership style." }, { brand: "Narciso Rodriguez", name: "For Him Bleu Noir", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg", descriptionCN: "內斂卻強大的木質麝香，展現您沉穩的權威感。", descriptionEN: "Understated yet powerful woody musk showcases your calm authority." }] },
-    ENTP: { category: "ENTP", nicknameCN: "辯論家", nicknameEN: "The Debater", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ENTP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENTP_BG.png", sloganCN: "「挑戰常規，才能發現新的可能。」", sloganEN: "\"Challenge conventions to discover new possibilities.\"", rationaleCN: "作為創新與辯論的愛好者，您喜歡獨特、前衛且富有爭議性的香氣。您的香水應該反映您的創造力和冒險精神。", rationaleEN: "As a lover of innovation and debate, you enjoy unique, avant-garde, and controversial scents reflecting your creativity.", fragranceCN: "辛香調 / 芳香調 / 木質調", fragranceEN: "Spicy / Aromatic / Woody", products: [{ brand: "Creed", name: "Aventus", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg", descriptionCN: "複雜而有層次的結構，如同您多面向的思維方式。", descriptionEN: "Complex layered structure mirrors your multifaceted thinking." }, { brand: "27 87", name: "Wandervogel", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg", descriptionCN: "前衛的紫蘇與海風感，表達您不願被框限的創新精神。", descriptionEN: "Avant-garde shiso and sea breeze express your unbounded innovative spirit." }] },
-    INFJ: { category: "INFJ", nicknameCN: "提倡者", nicknameEN: "The Advocate", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_INFJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INFJ_BG.png", sloganCN: "「理想主義不是逃避現實，而是創造未來。」", sloganEN: "\"Idealism is not escaping reality, but creating the future.\"", rationaleCN: "作為富有洞察力的理想主義者，您需要深邃、溫暖且具有精神層次的香氣。您的香水應該反映您的同理心和願景。", rationaleEN: "As an insightful idealist, you need profound, warm, and spiritually layered scents reflecting your empathy and vision.", fragranceCN: "東方調 / 花香調 / 木質調", fragranceEN: "Oriental / Floral / Woody", products: [{ brand: "Nishane", name: "Ani", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg", descriptionCN: "Ani 的香草與辛香層次，像一個循序漸進的擁抱，特別適合營造信任氛圍。", descriptionEN: "Ani's vanilla and spice layers create a progressive embrace, perfect for building trust." }, { brand: "Nishane", name: "Nanshe", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg", descriptionCN: "帶粉感的玫瑰與皂感氣息，提供安穩與支持的溫暖感受。", descriptionEN: "Powdery rose and soapy scent provide stable and supportive warmth." }] },
-    INFP: { category: "INFP", nicknameCN: "調停者", nicknameEN: "The Mediator", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_INFP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INFP_BG.png", sloganCN: "「在內心的世界裡，我找到真正的自由。」", sloganEN: "\"In my inner world, I find true freedom.\"", rationaleCN: "作為浪漫且富有想像力的夢想家，您喜歡柔和、詩意且富有情感的香氣。您的香水應該是您內心世界的延伸。", rationaleEN: "As a romantic and imaginative dreamer, you enjoy soft, poetic, and emotional scents as an extension of your inner world.", fragranceCN: "花香調 / 美食調 / 東方調", fragranceEN: "Floral / Gourmand / Oriental", products: [{ brand: "Casamorati (Xerjoff)", name: "Lira", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg", descriptionCN: "Lira 彷彿檸檬磅蛋糕般的美食香調，甜而不膩，讓你的體貼變得具體可感。", descriptionEN: "Lira's lemon pound cake gourmand scent makes your thoughtfulness tangible and approachable." }, { brand: "Nishane", name: "Nanshe", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg", descriptionCN: "柔軟的玫瑰與皂感，像一條溫暖的毛毯包裹著您的情感世界。", descriptionEN: "Soft rose and soapy scent wrap your emotional world like a warm blanket." }] },
-    ENFJ: { category: "ENFJ", nicknameCN: "主人公", nicknameEN: "The Protagonist", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ENFJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENFJ_BG.png", sloganCN: "「影響他人，從理解他人開始。」", sloganEN: "\"Influencing others begins with understanding them.\"", rationaleCN: "作為天生的導師和激勵者，您需要溫暖、迷人且具有感染力的香氣。您的香水應該反映您的魅力和領導力。", rationaleEN: "As a natural mentor and motivator, you need warm, charming, and contagious scents reflecting your charisma and leadership.", fragranceCN: "花香調 / 東方調 / 美食調", fragranceEN: "Floral / Oriental / Gourmand", products: [{ brand: "Nishane", name: "Ani", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg", descriptionCN: "溫暖的香草與辛香，幫助您建立安全感與信任，鼓勵他人向您敞開心扉。", descriptionEN: "Warm vanilla and spice help you build safety and trust, encouraging others to open up." }, { brand: "Casamorati (Xerjoff)", name: "Lira", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg", descriptionCN: "甜美的美食調，讓您的親和力變得具體且令人難忘。", descriptionEN: "Sweet gourmand makes your approachability tangible and memorable." }] },
-    ENFP: { category: "ENFP", nicknameCN: "競選者", nicknameEN: "The Campaigner", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ENFP_2.png", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENFP_BG.png", sloganCN: "「生命是一場冒險，每一天都充滿可能。」", sloganEN: "\"Life is an adventure, every day full of possibilities.\"", rationaleCN: "作為充滿熱情的自由靈魂，您喜歡明亮、活潑且富有創意的香氣。您的香水應該反映您的樂觀和熱情。", rationaleEN: "As a passionate free spirit, you enjoy bright, lively, and creative scents reflecting your optimism and enthusiasm.", fragranceCN: "花香調 / 美食調 / 果香調", fragranceEN: "Floral / Gourmand / Fruity", products: [{ brand: "Casamorati (Xerjoff)", name: "Lira", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg", descriptionCN: "如同檸檬磅蛋糕的甜美香氣，展現您溫暖而充滿活力的個性。", descriptionEN: "Lemon pound cake sweetness showcases your warm and vibrant personality." }, { brand: "Nishane", name: "Ani", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg", descriptionCN: "層層遞進的香草與辛香，如同您豐富多變的情感表達。", descriptionEN: "Progressive vanilla and spice mirror your rich and varied emotional expression." }] },
-    ISTJ: { category: "ISTJ", nicknameCN: "物流師", nicknameEN: "The Logistician", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ISTJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISTJ_BG.png", sloganCN: "「可靠，源於對細節的堅持。」", sloganEN: "\"Reliability comes from attention to detail.\"", rationaleCN: "作為務實且有條理的守護者，您偏愛清晰、穩定且專業的香氣。您的香水應該展現您的可靠性和責任感。", rationaleEN: "As a pragmatic and organized guardian, you favor clear, stable, and professional scents showcasing your reliability.", fragranceCN: "木質調 / 清新調 / 柑橘調", fragranceEN: "Woody / Fresh / Citrus", products: [{ brand: "Narciso Rodriguez", name: "For Her EDT", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg", descriptionCN: "貼膚麝香的氣質，低調卻難以忽視，讓人自然聯想到細心、體貼與可靠。", descriptionEN: "Skin-like musk is understated yet impossible to ignore, naturally evoking meticulousness and reliability." }, { brand: "Acqua di Parma", name: "Buongiorno", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg", descriptionCN: "草本柑橘香特別適合有序的工作日早晨，帶來清新有序的感覺。", descriptionEN: "Herbal citrus scent perfect for organized work mornings, bringing fresh orderliness." }] },
-    ISFJ: { category: "ISFJ", nicknameCN: "守衛者", nicknameEN: "The Defender", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ISFJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISFJ_BG.png", sloganCN: "「守護，是我最溫柔的力量。」", sloganEN: "\"Protection is my gentlest strength.\"", rationaleCN: "作為溫暖且細心的照顧者，您喜歡柔和、舒適且令人安心的香氣。您的香水應該反映您的溫柔和奉獻精神。", rationaleEN: "As a warm and attentive caregiver, you enjoy soft, comfortable, and reassuring scents reflecting your gentleness.", fragranceCN: "花香調 / 清新麝香 / 柑橘調", fragranceEN: "Floral / Clean Musk / Citrus", products: [{ brand: "Narciso Rodriguez", name: "For Her EDT", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg", descriptionCN: "如天生體香般的貼膚麝香，非常適合日常使用，展現您的細心體貼。", descriptionEN: "Natural skin-like musk perfect for daily wear, showcasing your attentive thoughtfulness." }, { brand: "Xerjoff", name: "Torino 23", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg", descriptionCN: "白花與木質底蘊，讓您在正式或休閒場合都保持得體而溫暖的形象。", descriptionEN: "White floral and woody base keep you poised and warm across formal and casual settings." }] },
-    ESTJ: { category: "ESTJ", nicknameCN: "總經理", nicknameEN: "The Executive", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ESTJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESTJ_BG.png", sloganCN: "「秩序與效率，是成功的基石。」", sloganEN: "\"Order and efficiency are the cornerstones of success.\"", rationaleCN: "作為果斷且有組織的管理者，您需要專業、權威且令人印象深刻的香氣。您的香水應該展現您的領導力和效率。", rationaleEN: "As a decisive and organized manager, you need professional, authoritative, and impressive scents showcasing your leadership.", fragranceCN: "木質調 / 辛香調 / 清新調", fragranceEN: "Woody / Spicy / Fresh", products: [{ brand: "Acqua di Parma", name: "Buongiorno", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg", descriptionCN: "草本柑橘香如同「正式開始」的啟動鍵，適合需要專注處理細節的工作日。", descriptionEN: "Herbal citrus scent is like a start button, perfect for detail-focused workdays." }, { brand: "Xerjoff", name: "Torino 23", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg", descriptionCN: "白花與木質結構，讓您無論在何種場合都保持專業得體的形象。", descriptionEN: "White floral and woody structure keep you professionally poised in any setting." }] },
-    ESFJ: { category: "ESFJ", nicknameCN: "執政官", nicknameEN: "The Consul", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ESFJ.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESFJ_BG.png", sloganCN: "「和諧，來自於對每個人的關心。」", sloganEN: "\"Harmony comes from caring for everyone.\"", rationaleCN: "作為熱情且善於社交的協調者，您喜歡溫暖、親切且易於親近的香氣。您的香水應該反映您的友善和同理心。", rationaleEN: "As an enthusiastic and sociable coordinator, you enjoy warm, friendly, and approachable scents reflecting your kindness.", fragranceCN: "花香調 / 清新調 / 美食調", fragranceEN: "Floral / Fresh / Gourmand", products: [{ brand: "Narciso Rodriguez", name: "For Her EDT", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg", descriptionCN: "貼膚麝香讓您散發出自然的親和力，適合家庭聚會與社交場合。", descriptionEN: "Skin-like musk radiates natural approachability, perfect for family gatherings and social occasions." }, { brand: "Acqua di Parma", name: "Buongiorno", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg", descriptionCN: "清新的柑橘草本香，為您的每一天帶來積極正面的開始。", descriptionEN: "Fresh citrus and herbal scent brings a positive start to each day." }] },
-    ISTP: { category: "ISTP", nicknameCN: "鑑賞家", nicknameEN: "The Virtuoso", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ISTP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISTP_BG.png", sloganCN: "「行動勝於言語，技藝勝於理論。」", sloganEN: "\"Actions speak louder than words, skill trumps theory.\"", rationaleCN: "作為實用主義的工匠，您喜歡簡潔、有力且不做作的香氣。您的香水應該反映您的獨立性和技術專長。", rationaleEN: "As a pragmatic craftsman, you enjoy simple, powerful, and unpretentious scents reflecting your independence.", fragranceCN: "木質調 / 皮革調 / 辛香調", fragranceEN: "Woody / Leather / Spicy", products: [{ brand: "LM Parfums", name: "Hard Leather", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg", descriptionCN: "帶動物感的皮革與沈香組合，氣味存在感極強，清楚保留您敢衝敢試的態度。", descriptionEN: "Animalic leather and oud combination with strong presence clearly preserves your bold attitude." }, { brand: "Nasomatto", name: "Black Afgano", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nasomatto_Black Afgano_Extrait de parfum.jpg", descriptionCN: "厚重樹脂與煙燻，適合打破他人對您的既定印象，保留難以被看穿的神秘感。", descriptionEN: "Heavy resin and smoke perfect for breaking expectations and maintaining elusive mystery." }] },
-    ISFP: { category: "ISFP", nicknameCN: "探險家", nicknameEN: "The Adventurer", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ISFP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISFP_BG.png", sloganCN: "「藝術與美，是我生活的語言。」", sloganEN: "\"Art and beauty are the language of my life.\"", rationaleCN: "作為藝術家靈魂的探險家，您喜歡獨特、富有表現力且充滿情感的香氣。您的香水應該是您個人藝術表達的一部分。", rationaleEN: "As an adventurer with an artist's soul, you enjoy unique, expressive, and emotional scents as part of your personal art.", fragranceCN: "木質調 / 柑橘調 / 東方調", fragranceEN: "Woody / Citrus / Oriental", products: [{ brand: "BLACK FADES", name: "夕 (zik6)", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_blackfades_zik.jpg", descriptionCN: "以黃昏為意象的香氣，苦檸檬、青檸與絲柏帶出冷調清新，隨後松木、苔蘚、岩蘭草堆疊出木質與琥珀感的空間。", descriptionEN: "Dusk-inspired scent with bitter lemon, lime, and cypress creating cool freshness, then pine, moss, and vetiver building woody amber space." }, { brand: "Creed", name: "Virgin Island Water", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg", descriptionCN: "青檸、椰子與白蘭姆營造如同行走假期般的氛圍，適合夏天與輕鬆場合。", descriptionEN: "Lime, coconut, and white rum create a walking vacation vibe, perfect for summer and casual occasions." }] },
-    ESTP: { category: "ESTP", nicknameCN: "企業家", nicknameEN: "The Entrepreneur", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ESTP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESTP_BG.png", sloganCN: "「冒險與機會，就在當下。」", sloganEN: "\"Adventure and opportunity are in the present moment.\"", rationaleCN: "作為充滿活力的行動派，您需要大膽、動感且令人興奮的香氣。您的香水應該反映您的冒險精神和即興應變能力。", rationaleEN: "As an energetic action-taker, you need bold, dynamic, and exciting scents reflecting your adventurous spirit.", fragranceCN: "辛香調 / 水生調 / 皮革調", fragranceEN: "Spicy / Aquatic / Leather", products: [{ brand: "Creed", name: "Virgin Island Water", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg", descriptionCN: "青檸、椰子與白蘭姆的熱帶調性，完美適合沙灘、音樂節或任何輕鬆玩樂的場合。", descriptionEN: "Lime, coconut, and white rum tropical notes perfect for beaches, festivals, or any fun occasion." }, { brand: "LM Parfums", name: "Hard Leather", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg", descriptionCN: "帶動物感的皮革，氣味存在感極強，適合夜晚、派對或需要留下深刻印象的場合。", descriptionEN: "Animalic leather with strong presence, perfect for nights, parties, or making lasting impressions." }] },
-    ESFP: { category: "ESFP", nicknameCN: "表演者", nicknameEN: "The Entertainer", characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/mbti_ESFP.jpg", backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESFP_BG.png", sloganCN: "「生活就是舞台，每一刻都值得慶祝。」", sloganEN: "\"Life is a stage, every moment worth celebrating.\"", rationaleCN: "作為天生的表演者，您喜歡明亮、歡樂且令人難忘的香氣。您的香水應該反映您的魅力和對生活的熱愛。", rationaleEN: "As a natural performer, you enjoy bright, joyful, and memorable scents reflecting your charisma and love of life.", fragranceCN: "果香調 / 水生調 / 美食調", fragranceEN: "Fruity / Aquatic / Gourmand", products: [{ brand: "Creed", name: "Virgin Island Water", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg", descriptionCN: "如同Piña Colada般的熱帶氣息，營造出行走假期般的歡樂氛圍。", descriptionEN: "Piña Colada-like tropical vibe creates a walking vacation atmosphere." }, { brand: "27 87", name: "Wandervogel", imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg", descriptionCN: "前衛的紫蘇與海風感，帶著未來感與實驗氣質，表達您充滿活力的一面。", descriptionEN: "Avant-garde shiso and sea breeze with futuristic experimental quality expressing your vibrant side." }] }
+    INTP: {
+        category: "INTP",
+        nicknameCN: "邏輯學家",
+        nicknameEN: "The Logician",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INTP_BG.png",
+        sloganCN: "「在概念的迷宮中，我尋找真理的出口。」",
+        sloganEN: "\"In the labyrinth of concepts, I seek the exit of truth.\"",
+        rationaleCN: "作為追求知識與理論的思��者，您喜歡抽象且富有層次的氣味。您的香氣應該反映您對探索未知的熱情與好奇心。",
+        rationaleEN: "As a knowledge and theory-seeking thinker, you enjoy abstract and layered scents that reflect your passion for exploring the unknown.",
+        fragranceCN: "木質調 / 辛香調 / 芳香調",
+        fragranceEN: "Woody / Spicy / Aromatic",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Him Bleu Noir",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg",
+                descriptionCN: "話不多、但每一句都經過思考的性格，與 Bleu Noir 內斂辛香與木質麝香的氣質非常相襯。",
+                descriptionEN: "If you're not naturally talkative, Bleu Noir's dark woody musk makes your silence deep rather than lacking presence."
+            },
+            {
+                brand: "Creed",
+                name: "Silver Mountain Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg",
+                descriptionCN: "冷冽茶香與金屬感山泉氣息，呼應您理性且純淨的思考方式。",
+                descriptionEN: "Cold tea and metallic spring water scent echoes your rational and pure thinking."
+            }
+        ]
+    },
+    ENTJ: {
+        category: "ENTJ",
+        nicknameCN: "指揮官",
+        nicknameEN: "The Commander",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENTJ_BG.png",
+        sloganCN: "「領導不是權力，而是責任與遠見。」",
+        sloganEN: "\"Leadership is not power, but responsibility and vision.\"",
+        rationaleCN: "作為天生的領導者，您需要強大、自信且令人難忘的香氣。您的香水應該展現您的決斷力和影響力。",
+        rationaleEN: "As a natural leader, you need powerful, confident, and memorable scents that showcase your decisiveness and influence.",
+        fragranceCN: "木質調 / 辛香調 / 皮革調",
+        fragranceEN: "Woody / Spicy / Leather",
+        products: [
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "Aventus 的煙燻菠蘿與木質結構，完美呼應您統籌全局的領導風範。",
+                descriptionEN: "Aventus' smoky pineapple and woody structure perfectly echo your commanding leadership style."
+            },
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Him Bleu Noir",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg",
+                descriptionCN: "內斂卻強大的木質麝香，展現您沉穩的權威感。",
+                descriptionEN: "Understated yet powerful woody musk showcases your calm authority."
+            }
+        ]
+    },
+    ENTP: {
+        category: "ENTP",
+        nicknameCN: "辯論家",
+        nicknameEN: "The Debater",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENTP_BG.png",
+        sloganCN: "「挑戰常規，才能發現新的可能。」",
+        sloganEN: "\"Challenge conventions to discover new possibilities.\"",
+        rationaleCN: "作為創新與辯論的愛好者，您喜歡獨特、前衛且富有爭議性的香氣。您的香水應該反映您的創造力和冒險精神。",
+        rationaleEN: "As a lover of innovation and debate, you enjoy unique, avant-garde, and controversial scents reflecting your creativity.",
+        fragranceCN: "辛香調 / 芳香調 / 木質調",
+        fragranceEN: "Spicy / Aromatic / Woody",
+        products: [
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "複雜而有層次的結構，如同您多面向的思維方式。",
+                descriptionEN: "Complex layered structure mirrors your multifaceted thinking."
+            },
+            {
+                brand: "27 87",
+                name: "Wandervogel",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg",
+                descriptionCN: "前衛的紫蘇與海風感，表達您不願被框限的創新精神。",
+                descriptionEN: "Avant-garde shiso and sea breeze express your unbounded innovative spirit."
+            }
+        ]
+    },
+    INFJ: {
+        category: "INFJ",
+        nicknameCN: "提倡者",
+        nicknameEN: "The Advocate",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INFJ_BG.png",
+        sloganCN: "「理想主義不是逃避現實，而是創造未來。」",
+        sloganEN: "\"Idealism is not escaping reality, but creating the future.\"",
+        rationaleCN: "作為富有洞察力的理想主義者，您需要深邃、溫暖且具有精神層次的香氣。您的香水應該反映您的同理心和願景。",
+        rationaleEN: "As an insightful idealist, you need profound, warm, and spiritually layered scents reflecting your empathy and vision.",
+        fragranceCN: "東方調 / 花香調 / 木質調",
+        fragranceEN: "Oriental / Floral / Woody",
+        products: [
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "Ani 的香草與辛香層次，像一個循序漸進的擁抱，特別適合營造信任氛圍。",
+                descriptionEN: "Ani's vanilla and spice layers create a progressive embrace, perfect for building trust."
+            },
+            {
+                brand: "Nishane",
+                name: "Nanshe",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg",
+                descriptionCN: "帶粉感的玫瑰與皂感氣息，提供安穩與支持的溫暖感受。",
+                descriptionEN: "Powdery rose and soapy scent provide stable and supportive warmth."
+            }
+        ]
+    },
+    INFP: {
+        category: "INFP",
+        nicknameCN: "調停者",
+        nicknameEN: "The Mediator",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INFP_BG.png",
+        sloganCN: "「在內心的世界裡，我找到真正的自由。」",
+        sloganEN: "\"In my inner world, I find true freedom.\"",
+        rationaleCN: "作為浪漫且富有想像力的夢想家，您喜歡柔和、詩意且富有情感的香氣。您的香水應該是您內心世界的延伸。",
+        rationaleEN: "As a romantic and imaginative dreamer, you enjoy soft, poetic, and emotional scents as an extension of your inner world.",
+        fragranceCN: "花香調 / 美食調 / 東方調",
+        fragranceEN: "Floral / Gourmand / Oriental",
+        products: [
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "Lira 彷彿檸檬磅蛋糕般的美食香調，甜而不膩，讓你的體貼變得具體可感。",
+                descriptionEN: "Lira's lemon pound cake gourmand scent makes your thoughtfulness tangible and approachable."
+            },
+            {
+                brand: "Nishane",
+                name: "Nanshe",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg",
+                descriptionCN: "柔軟的玫瑰與皂感，像一條溫暖的毛毯包裹著您的情感世界。",
+                descriptionEN: "Soft rose and soapy scent wrap your emotional world like a warm blanket."
+            }
+        ]
+    },
+    ENFJ: {
+        category: "ENFJ",
+        nicknameCN: "主人公",
+        nicknameEN: "The Protagonist",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_enfj.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENFJ_BG.png",
+        sloganCN: "「影響他人，從理解他人開始。」",
+        sloganEN: "\"Influencing others begins with understanding them.\"",
+        rationaleCN: "作為天生的導師和激勵者，您需要溫暖、迷人且具有感染力的香氣。您的香水應該反映您的魅力和領導力。",
+        rationaleEN: "As a natural mentor and motivator, you need warm, charming, and contagious scents reflecting your charisma and leadership.",
+        fragranceCN: "花香調 / 東方調 / 美食調",
+        fragranceEN: "Floral / Oriental / Gourmand",
+        products: [
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "溫暖的香草與辛香，幫助您建立安全感與信任，鼓勵他人向您敞開心扉。",
+                descriptionEN: "Warm vanilla and spice help you build safety and trust, encouraging others to open up."
+            },
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "甜美的美食調，讓您的親和力變得具體且令人難忘。",
+                descriptionEN: "Sweet gourmand makes your approachability tangible and memorable."
+            }
+        ]
+    },
+    ENFP: {
+        category: "ENFP",
+        nicknameCN: "競選者",
+        nicknameEN: "The Campaigner",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENFP_BG.png",
+        sloganCN: "「生命是一場冒險，每一天都充滿可能。」",
+        sloganEN: "\"Life is an adventure, every day full of possibilities.\"",
+        rationaleCN: "作為充滿熱情的自由靈魂，您喜歡明亮、活潑且富有創意的香氣。您的香水應該反映您的樂觀和熱情。",
+        rationaleEN: "As a passionate free spirit, you enjoy bright, lively, and creative scents reflecting your optimism and enthusiasm.",
+        fragranceCN: "花香調 / 美食調 / 果香調",
+        fragranceEN: "Floral / Gourmand / Fruity",
+        products: [
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "如同檸檬磅蛋糕的甜美香氣，展現您溫暖而充滿活力的個性。",
+                descriptionEN: "Lemon pound cake sweetness showcases your warm and vibrant personality."
+            },
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "層層遞進的香草與辛香，如同您豐富多變的情感表達。",
+                descriptionEN: "Progressive vanilla and spice mirror your rich and varied emotional expression."
+            }
+        ]
+    },
+    ISTJ: {
+        category: "ISTJ",
+        nicknameCN: "物流師",
+        nicknameEN: "The Logistician",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISTJ_BG.png",
+        sloganCN: "「可靠，源於對細節的堅持。」",
+        sloganEN: "\"Reliability comes from attention to detail.\"",
+        rationaleCN: "作為務實且有條理的守護者，您偏愛清晰、穩定且專業的香氣。您的香水應該展現您的可靠性和責任感。",
+        rationaleEN: "As a pragmatic and organized guardian, you favor clear, stable, and professional scents showcasing your reliability.",
+        fragranceCN: "木質調 / 清新調 / 柑橘調",
+        fragranceEN: "Woody / Fresh / Citrus",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "貼膚麝香的氣質，低調卻難以忽視，讓人自然聯想到細心、體貼與可靠。",
+                descriptionEN: "Skin-like musk is understated yet impossible to ignore, naturally evoking meticulousness and reliability."
+            },
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "草本柑橘香特別適合有序的工作日早晨，帶來清新有序的感覺。",
+                descriptionEN: "Herbal citrus scent perfect for organized work mornings, bringing fresh orderliness."
+            }
+        ]
+    },
+    ISFJ: {
+        category: "ISFJ",
+        nicknameCN: "守衛者",
+        nicknameEN: "The Defender",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISFJ_BG.png",
+        sloganCN: "「守護，是我最溫柔的力量。」",
+        sloganEN: "\"Protection is my gentlest strength.\"",
+        rationaleCN: "作為溫暖且細心的照顧者，您喜歡柔和、舒適且令人安心的香氣。您的香水應該反映您的溫柔和奉獻精神。",
+        rationaleEN: "As a warm and attentive caregiver, you enjoy soft, comfortable, and reassuring scents reflecting your gentleness.",
+        fragranceCN: "花香調 / 清新麝香 / 柑橘調",
+        fragranceEN: "Floral / Clean Musk / Citrus",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "如天生體香般的貼膚麝香，非常適合日常使用，展現您的細心體貼。",
+                descriptionEN: "Natural skin-like musk perfect for daily wear, showcasing your attentive thoughtfulness."
+            },
+            {
+                brand: "Xerjoff",
+                name: "Torino 23",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg",
+                descriptionCN: "白花與木質底蘊，讓您在正式或休閒場合都保持得體而溫暖的形象。",
+                descriptionEN: "White floral and woody base keep you poised and warm across formal and casual settings."
+            }
+        ]
+    },
+    ESTJ: {
+        category: "ESTJ",
+        nicknameCN: "總經理",
+        nicknameEN: "The Executive",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESTJ_BG.png",
+        sloganCN: "「秩序與效率，是成功的基石。」",
+        sloganEN: "\"Order and efficiency are the cornerstones of success.\"",
+        rationaleCN: "作為果斷且有組織的管理者，您需要專業、權威且令人印象深刻的香氣。您的香水應該展現您的領導力和效率。",
+        rationaleEN: "As a decisive and organized manager, you need professional, authoritative, and impressive scents showcasing your leadership.",
+        fragranceCN: "木質調 / 辛香調 / 清新調",
+        fragranceEN: "Woody / Spicy / Fresh",
+        products: [
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "草本柑橘香如同「正式開始」的啟動鍵，適合需要專注處理細節的工作日。",
+                descriptionEN: "Herbal citrus scent is like a start button, perfect for detail-focused workdays."
+            },
+            {
+                brand: "Xerjoff",
+                name: "Torino 23",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg",
+                descriptionCN: "白花與木質結構，讓您無論在何種場合都保持專業得體的形象。",
+                descriptionEN: "White floral and woody structure keep you professionally poised in any setting."
+            }
+        ]
+    },
+    ESFJ: {
+        category: "ESFJ",
+        nicknameCN: "執政官",
+        nicknameEN: "The Consul",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESFJ_BG.png",
+        sloganCN: "「和諧，來自於對每個人的關心。」",
+        sloganEN: "\"Harmony comes from caring for everyone.\"",
+        rationaleCN: "作為熱情且善於社交的協調者，您喜歡溫暖、親切且易於親近的香氣。您的香水應該反映您的友善和同理心。",
+        rationaleEN: "As an enthusiastic and sociable coordinator, you enjoy warm, friendly, and approachable scents reflecting your kindness.",
+        fragranceCN: "花香調 / 清新調 / 美食調",
+        fragranceEN: "Floral / Fresh / Gourmand",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "貼膚麝香讓您散發出自然的親和力，適合家庭聚會與社交場合。",
+                descriptionEN: "Skin-like musk radiates natural approachability, perfect for family gatherings and social occasions."
+            },
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "清新的柑橘草本香，為您的每一天帶來積極正面的開始。",
+                descriptionEN: "Fresh citrus and herbal scent brings a positive start to each day."
+            }
+        ]
+    },
+    ISTP: {
+        category: "ISTP",
+        nicknameCN: "鑑賞家",
+        nicknameEN: "The Virtuoso",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISTP_BG.png",
+        sloganCN: "「行動勝於言語，技藝勝於理論。」",
+        sloganEN: "\"Actions speak louder than words, skill trumps theory.\"",
+        rationaleCN: "作為實用主義的工匠，您喜歡簡潔、有力且不做作的香氣。您的香水應該反映您的獨立性和技術專長。",
+        rationaleEN: "As a pragmatic craftsman, you enjoy simple, powerful, and unpretentious scents reflecting your independence.",
+        fragranceCN: "木質調 / 皮革調 / 辛香調",
+        fragranceEN: "Woody / Leather / Spicy",
+        products: [
+            {
+                brand: "LM Parfums",
+                name: "Hard Leather",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg",
+                descriptionCN: "帶動物感的皮革與沈香組合，氣味存在感極強，清楚保留您敢衝敢試的態度。",
+                descriptionEN: "Animalic leather and oud combination with strong presence clearly preserves your bold attitude."
+            },
+            {
+                brand: "Nasomatto",
+                name: "Black Afgano",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nasomatto_Black Afgano_Extrait de parfum.jpg",
+                descriptionCN: "厚重樹脂與煙燻，適合打破他人對您的既定印象，保留難以被看穿的神秘感。",
+                descriptionEN: "Heavy resin and smoke perfect for breaking expectations and maintaining elusive mystery."
+            }
+        ]
+    },
+    ISFP: {
+        category: "ISFP",
+        nicknameCN: "探險家",
+        nicknameEN: "The Adventurer",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ISFP_BG.png",
+        sloganCN: "「藝術與美，是我生活的語言。」",
+        sloganEN: "\"Art and beauty are the language of my life.\"",
+        rationaleCN: "作為藝術家靈魂的探險家，您喜歡獨特、富有表現力且充滿情感的香氣。您的香水應該是您個人藝術表達的一部分。",
+        rationaleEN: "As an adventurer with an artist's soul, you enjoy unique, expressive, and emotional scents as part of your personal art.",
+        fragranceCN: "木質調 / 柑橘調 / 東方調",
+        fragranceEN: "Woody / Citrus / Oriental",
+        products: [
+            {
+                brand: "BLACK FADES",
+                name: "夕 (zik6)",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_blackfades_zik.jpg",
+                descriptionCN: "以黃昏為意象的香氣，苦檸檬、青檸與絲柏帶出冷調清新，隨後松木、苔蘚、岩蘭草堆疊出木質與琥珀感的空間。",
+                descriptionEN: "Dusk-inspired scent with bitter lemon, lime, and cypress creating cool freshness, then pine, moss, and vetiver building woody amber space."
+            },
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "青檸、椰子與白蘭姆營造如同行走假期般的氛圍，適合夏天與輕鬆場合。",
+                descriptionEN: "Lime, coconut, and white rum create a walking vacation vibe, perfect for summer and casual occasions."
+            }
+        ]
+    },
+    ESTP: {
+        category: "ESTP",
+        nicknameCN: "企業家",
+        nicknameEN: "The Entrepreneur",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_estp.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESTP_BG.png",
+        sloganCN: "「冒險與機會，就在當下。」",
+        sloganEN: "\"Adventure and opportunity are in the present moment.\"",
+        rationaleCN: "作為充滿活力的行動派，您需要大膽、動感且令人興奮的香氣。您的香水應該反映您的冒險精神和即興���變能力。",
+        rationaleEN: "As an energetic action-taker, you need bold, dynamic, and exciting scents reflecting your adventurous spirit.",
+        fragranceCN: "辛香調 / 水生調 / 皮革調",
+        fragranceEN: "Spicy / Aquatic / Leather",
+        products: [
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "青檸、椰子與白蘭姆的熱帶調性，完美適合沙灘、音樂節或任何輕鬆玩樂的場合。",
+                descriptionEN: "Lime, coconut, and white rum tropical notes perfect for beaches, festivals, or any fun occasion."
+            },
+            {
+                brand: "LM Parfums",
+                name: "Hard Leather",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg",
+                descriptionCN: "帶動物感的皮革，氣味存在感極強，適合夜晚、派對或需要留下深刻印象的場合。",
+                descriptionEN: "Animalic leather with strong presence, perfect for nights, parties, or making lasting impressions."
+            }
+        ]
+    },
+    ESFP: {
+        category: "ESFP",
+        nicknameCN: "表演者",
+        nicknameEN: "The Entertainer",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ESFP_BG.png",
+        sloganCN: "「生活就是舞台，每一刻都值得慶祝。」",
+        sloganEN: "\"Life is a stage, every moment worth celebrating.\"",
+        rationaleCN: "作為天生的表演者，您喜歡明亮、歡樂且令人難忘的香氣。您的香水應該反映您的魅力和對生活的熱愛。",
+        rationaleEN: "As a natural performer, you enjoy bright, joyful, and memorable scents reflecting your charisma and love of life.",
+        fragranceCN: "果香調 / 水生調 / 美食調",
+        fragranceEN: "Fruity / Aquatic / Gourmand",
+        products: [
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "如同Piña Colada般的熱帶氣息，營造出行走假期般的歡樂氛圍。",
+                descriptionEN: "Piña Colada-like tropical vibe creates a walking vacation atmosphere."
+            },
+            {
+                brand: "27 87",
+                name: "Wandervogel",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg",
+                descriptionCN: "前衛的紫蘇與海風感，帶著未來感與實驗氣質，表達您充滿活力的一面。",
+                descriptionEN: "Avant-garde shiso and sea breeze with futuristic experimental quality expressing your vibrant side."
+            }
+        ]
+    }
 };
 
 const questionMetaMap = {
@@ -178,6 +618,10 @@ const calcMbti = (answers) => {
     return `${E_or_I}${S_or_N}${T_or_F}${J_or_P}`;
 };
 
+// ============================================================================
+// 🌟 圖片資源 🌟
+// ============================================================================
+
 const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/iconA.png';
 const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/IconB.png';
 const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
@@ -189,6 +633,10 @@ const questionImages = {
     q4: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/4.png',
     intro: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png',
 };
+
+// ============================================================================
+// 🌟 翻譯資料 🌟
+// ============================================================================
 
 const zh_Questions = [
     { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、藝術家的抽象概念，以及它給予的無限聯想空間。' }, { key: 'S', text: '作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。' }], image: questionImages.q1, progressWidth: 366 },
@@ -234,6 +682,7 @@ const en_Content = {
 
 const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
 
+// QR Code 組件
 const QRCodeComp = ({ value, size }) => {
     const qrRef = useRef(null);
     useEffect(() => {
@@ -262,6 +711,10 @@ const QRCodeComp = ({ value, size }) => {
     return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
 };
 
+// ============================================================================
+// 🌟 主應用程式 🌟
+// ============================================================================
+
 const App = () => {
     const [currentPage, setCurrentPage] = useState('intro');
     const [currentLang, setCurrentLang] = useState('zh-TW');
@@ -276,7 +729,6 @@ const App = () => {
     const texts = translations[currentLang];
     const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-    // 🔥 修正1: 分享模式下讀取產品索引
     useEffect(() => {
         try {
             const params = new URLSearchParams(window.location.search);
@@ -334,7 +786,6 @@ const App = () => {
         setShareUrl('');
     }, []);
 
-    // 🔥 修正2: 隨機選擇產品並記錄索引
     const handleAnswer = useCallback((questionId, selectedIndex, isLastQuestion = false) => {
         setAnswers(prev => {
             const newAnswers = [...prev, { questionId, selectedIndex }];
@@ -401,6 +852,7 @@ const App = () => {
 
     return (
         <div style={{ position: 'relative', width: '2160px', height: '3840px', boxSizing: 'border-box' }}>
+            {/* 背景圖 */}
             <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 }}>
                 <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/pattern.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
@@ -412,6 +864,7 @@ const App = () => {
                 background: 'linear-gradient(165.55deg, #1A1A1A 0%, #2B2B2B 100%)',
                 boxShadow: '0px 0px 39.9px 1px #D4AF37', borderRadius: '35px'
             }}>
+                {/* Logo */}
                 <div style={{
                     position: 'absolute', top: '0px', zIndex: 100,
                     width: (currentPage === 'result' || currentPage === 'share') ? '864px' : '75%',
@@ -420,12 +873,13 @@ const App = () => {
                     <img src={logoImage} style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }} />
                 </div>
 
-                {/* 語言選項 - 首頁特殊位置 */}
+                {/* 語言選項 - 修正：只在首頁更新位置，其他頁面保持原位 */}
                 {currentPage !== 'result' && currentPage !== 'share' && !isShareMode && (
                     <div style={{ 
                         position: 'absolute', 
                         width: '553.5px', 
                         height: '108px', 
+                        // 🔥 關鍵修正：只在 intro 頁面時使用新位置
                         right: currentPage === 'intro' ? '80px' : '60px',
                         top: currentPage === 'intro' ? '3080px' : 'auto',
                         bottom: currentPage === 'intro' ? 'auto' : '80px',
@@ -442,6 +896,7 @@ const App = () => {
                     </div>
                 )}
 
+                {/* 退出按鈕 */}
                 {!isShareMode && (
                     <div style={{ position: 'absolute', left: '74px', top: '71px', zIndex: 52, display: currentPage==='intro'?'none':'block' }}>
                         <div style={{ position: 'absolute', width: '132px', height: '132px', border: '5px solid #B8860B', borderRadius: '50%', boxSizing: 'border-box' }}></div>
@@ -449,6 +904,7 @@ const App = () => {
                     </div>
                 )}
 
+                {/* Intro 頁面 */}
                 {currentPage === 'intro' && (
                     <>
                         <div style={{ position: 'absolute', width: '1330px', height: '38px', left: 'calc(50% - 1330px/2)', top: currentLang === 'en' ? '500px' : '470px' }}>
@@ -477,6 +933,7 @@ const App = () => {
                     </>
                 )}
 
+                {/* 姓名輸入頁面 */}
                 {currentPage === 'nameInput' && (
                     <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 60 }}>
                         <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.nameInput.title}</div>
@@ -500,6 +957,7 @@ const App = () => {
                     </div>
                 )}
 
+                {/* 問題頁面 */}
                 {texts.questions.map(q => currentPage === q.id && (
                     <div key={q.id}>
                         <div style={{ position: 'absolute', width: '1280px', left: '220px', top: '676px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '64px', textAlign: 'center', color: '#FFFFFF' }}>{texts.header.tagline}</div>
@@ -525,14 +983,14 @@ const App = () => {
                     </div>
                 ))}
 
-                {/* 結果頁面 - 完整視覺呈現 */}
+                {/* 🌟 完整升級版結果頁面 - 包含角色圖和背景圖 🌟 */}
                 {currentPage === 'result' && result && (
                     <div style={{ 
                         position: 'absolute', width: '100%', height: '100%', 
                         overflowY: 'auto',
                         overflowX: 'hidden'
                     }}>
-                        {/* 背景圖 */}
+                        {/* 背景圖片層 */}
                         <div style={{
                             position: 'absolute',
                             top: 0,
@@ -555,7 +1013,7 @@ const App = () => {
                             paddingTop: '366px',
                             paddingBottom: '100px'
                         }}>
-                            {/* 角色圖 */}
+                            {/* 角色圖片 */}
                             <div style={{
                                 width: '600px',
                                 height: '600px',
@@ -568,18 +1026,23 @@ const App = () => {
                                 <img src={result.resultData.characterImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
 
+                            {/* 問候語 */}
                             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>
                                 {texts.result.greeting}{playerName}
                             </div>
+
+                            {/* 標題 */}
                             <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '88px' : '105px', textAlign: 'center', color: '#D4AF37', marginBottom: '20px' }}>
                                 {texts.result.title}
                             </div>
                             <div style={{ width: '779px', height: '0', border: '6px solid #D4AF37', marginBottom: '40px' }}></div>
                             
+                            {/* MBTI 類型 & 暱稱 */}
                             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>
                                 {result.mbtiType} - {currentLang === 'zh-TW' ? result.resultData.nicknameCN : result.resultData.nicknameEN}
                             </div>
 
+                            {/* 名言 */}
                             <div style={{ 
                                 width: currentLang === 'en' ? '1488px' : '1188px', 
                                 fontFamily: "'Inter', sans-serif", 
@@ -592,6 +1055,7 @@ const App = () => {
                                 {currentLang === 'zh-TW' ? result.resultData.sloganCN : result.resultData.sloganEN}
                             </div>
 
+                            {/* 描述 */}
                             <div style={{ 
                                 width: currentLang === 'en' ? '1488px' : '1188px', 
                                 fontFamily: "'Inter', sans-serif", 
@@ -606,6 +1070,7 @@ const App = () => {
                                 {currentLang === 'zh-TW' ? result.resultData.rationaleCN : result.resultData.rationaleEN}
                             </div>
 
+                            {/* 推薦標題 */}
                             <div style={{ 
                                 width: '1412px', 
                                 height: '115px', 
@@ -623,6 +1088,7 @@ const App = () => {
                                 {texts.result.recommendation}
                             </div>
 
+                            {/* 產品容器 */}
                             <div style={{ 
                                 width: '1412px', 
                                 boxSizing: 'border-box', 
@@ -634,6 +1100,7 @@ const App = () => {
                                 padding: '50px 70px',
                                 background: 'rgba(26, 26, 26, 0.8)'
                             }}>
+                                {/* 香調標籤 */}
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px' }}>
                                     {(currentLang === 'zh-TW' ? result.resultData.fragranceCN : result.resultData.fragranceEN).split(' / ').map((tag, i) => (
                                         <div key={i} style={{ 
@@ -653,6 +1120,7 @@ const App = () => {
                                     ))}
                                 </div>
 
+                                {/* 產品卡片 */}
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%' }}>
                                     {result.resultData.products.slice(0, 2).map((p, i) => (
                                         <div key={i} style={{ 
@@ -693,7 +1161,7 @@ const App = () => {
                                                 color: '#FFFFFF', 
                                                 margin: '10px 0', 
                                                 textAlign: 'center' 
-                                                }}>{p.name}</div>
+                                            }}>{p.name}</div>
                                             <div style={{ 
                                                 fontFamily: "'Inter', sans-serif", 
                                                 fontSize: currentLang === 'en' ? '36px' : '40px', 
@@ -712,6 +1180,7 @@ const App = () => {
                                 </div>
                             </div>
 
+                            {/* 底部按鈕 */}
                             {!isShareMode && (
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '50px' }}>
                                     <button onClick={restartQuiz} style={{ 

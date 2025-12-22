@@ -306,7 +306,7 @@ const mbtiResults = {
         backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENFJ_BG.png",
         sloganCN: "「影響他人，從理解他人開始。」",
         sloganEN: "\"Influencing others begins with understanding them.\"",
-        rationaleCN: "作為天生的導師和激勵者，您需要溫暖、迷人且具有感染力的香氣。您的香水應該反映您的魅力和領導力。",
+        rationaleCN: "作為天生的導師和激勵者，您需要溫暖、迷人且具有感染力的香氣���您的香水應該反映您的魅力和領導力。",
         rationaleEN: "As a natural mentor and motivator, you need warm, charming, and contagious scents reflecting your charisma and leadership.",
         fragranceCN: "花香調 / 東方調 / 美食調",
         fragranceEN: "Floral / Oriental / Gourmand",
@@ -994,8 +994,7 @@ const App = () => {
                 {currentPage === 'result' && result && (
                     <div style={{ 
                         position: 'absolute', width: '100%', height: '100%', 
-                        overflowY: 'auto',
-                        overflowX: 'hidden'
+                        overflow: 'hidden'
                     }}>
                         {/* 背景圖片層 */}
                         <div style={{
@@ -1017,7 +1016,7 @@ const App = () => {
                             display: 'flex', 
                             flexDirection: 'column', 
                             alignItems: 'center', 
-                            paddingTop: '366px',
+                            paddingTop: '336px',
                             paddingBottom: '100px'
                         }}>
                             {/* 角色圖片 */}

@@ -24,6 +24,15 @@ body, html {
     overflow: hidden;
 }
 
+/* 隱藏滾動條但保留滾動功能 */
+body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+}
+body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
 /* 內容主容器 */
 #root { 
     width: 2160px; height: 3840px; 
@@ -83,15 +92,13 @@ const updateLayout = () => {
     const isMobile = screenW < 1000;
 
     if (isMobile) {
-        body.style.overflowY = 'auto';
-        body.style.overflowX = 'hidden';
+        body.style.overflow = 'hidden';
         const scale = screenW / targetW;
         root.style.position = 'absolute';
         root.style.left = '0';
         root.style.top = '0';
         root.style.transformOrigin = 'top left';
         root.style.transform = `scale(${scale})`;
-        body.style.height = `${targetH * scale}px`;
     } else {
         body.style.overflow = 'hidden';
         body.style.height = '100%';
@@ -151,7 +158,7 @@ const mbtiResults = {
         nicknameCN: "邏輯學家",
         nicknameEN: "The Logician",
         characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTP.png",
-        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INTP_BG.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/INTP.png",
         sloganCN: "「在概念的迷宮中，我尋找真理的出口。」",
         sloganEN: "\"In the labyrinth of concepts, I seek the exit of truth.\"",
         rationaleCN: "作為追求知識與理論的思��者，您喜歡抽象且富有層次的氣味。您的香氣應該反映您對探索未知的熱情與好奇心。",
@@ -212,7 +219,7 @@ const mbtiResults = {
         backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ENTP_BG.png",
         sloganCN: "「挑戰常規，才能發現新的可能。」",
         sloganEN: "\"Challenge conventions to discover new possibilities.\"",
-        rationaleCN: "作為創新與辯論的愛好者，您喜歡獨特、前衛且富有爭議性的香氣。您的香水應該反映您的創造力和冒險精神。",
+        rationaleCN: "作為創新與辯論的愛好者，您喜歡獨特、前衛且富有爭議性的香氣。您的香水應該反映您的創造力和冒險精神���",
         rationaleEN: "As a lover of innovation and debate, you enjoy unique, avant-garde, and controversial scents reflecting your creativity.",
         fragranceCN: "辛香調 / 芳香調 / 木質調",
         fragranceEN: "Spicy / Aromatic / Woody",
@@ -286,7 +293,7 @@ const mbtiResults = {
                 brand: "Nishane",
                 name: "Nanshe",
                 imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg",
-                descriptionCN: "柔軟的玫瑰與皂感，像一條溫暖的毛毯包裹著您的情感世界。",
+                descriptionCN: "柔軟的玫瑰與皂感，像一條溫暖的毛毯包裹著您��情感世界。",
                 descriptionEN: "Soft rose and soapy scent wrap your emotional world like a warm blanket."
             }
         ]
@@ -798,7 +805,7 @@ const App = () => {
                     // 隨機選擇2個產品並記錄索引
                     let selectedProducts, p1Index, p2Index;
                     
-                    // 特殊處理：ISFP 固定包含「夕」產品
+                    // 特殊處理：ISFP 固定包含���夕」產品
                     if (mbtiType === 'ISFP') {
                         const zikProduct = originalResultData.products.find(p => p.brand === 'BLACK FADES');
                         const otherProducts = originalResultData.products.filter(p => p.brand !== 'BLACK FADES');

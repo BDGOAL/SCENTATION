@@ -158,7 +158,8 @@ const mbtiResults = {
         nicknameCN: "邏輯學家",
         nicknameEN: "The Logician",
         characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTP.png",
-        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/INTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/INTP_BG.png",
+        productBoxBackground: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/INTP.png",
         sloganCN: "「在概念的迷宮中，我尋找真理的出口。」",
         sloganEN: "\"In the labyrinth of concepts, I seek the exit of truth.\"",
         rationaleCN: "作為追求知識與理論的思��者，您喜歡抽象且富有層次的氣味。您的香氣應該反映您對探索未知的熱情與好奇心。",
@@ -1105,10 +1106,27 @@ const App = () => {
                                 flexDirection: 'column', 
                                 alignItems: 'center', 
                                 padding: '50px 70px',
-                                background: 'rgba(26, 26, 26, 0.8)'
+                                background: 'rgba(26, 26, 26, 0.8)',
+                                position: 'relative',
+                                overflow: 'hidden'
                             }}>
+                                {/* 產品框背景圖片層 */}
+                                {result.resultData.productBoxBackground && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        zIndex: 0,
+                                        opacity: 0.15
+                                    }}>
+                                        <img src={result.resultData.productBoxBackground} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </div>
+                                )}
+                                
                                 {/* 香調標籤 */}
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px', position: 'relative', zIndex: 1 }}>
                                     {(currentLang === 'zh-TW' ? result.resultData.fragranceCN : result.resultData.fragranceEN).split(' / ').map((tag, i) => (
                                         <div key={i} style={{ 
                                             padding: '19px 52px', 
@@ -1128,7 +1146,7 @@ const App = () => {
                                 </div>
 
                                 {/* 產品卡片 */}
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%', position: 'relative', zIndex: 1 }}>
                                     {result.resultData.products.slice(0, 2).map((p, i) => (
                                         <div key={i} style={{ 
                                             width: '482px', 

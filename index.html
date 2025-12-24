@@ -56,8 +56,22 @@ button:focus { outline: none; }
 /* 錯誤提示 */
 #fatal-error {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9); color: #ff5555; z-index: 100000;
-    padding: 50px; font-size: 30px; white-space: pre-wrap; overflow: auto;
+    background: rgba(0,0,0,0.95); color: #ffdddd; z-index: 100000;
+    padding: 30px; font-size: 18px; white-space: pre-wrap; overflow: auto;
+}
+
+/* Small debug helper box */
+#debug-info {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  z-index: 100001;
 }
 </style>
 </head>
@@ -65,13 +79,18 @@ button:focus { outline: none; }
 <div id="fatal-error"></div>
 <div id="loading"><div>Loading System...</div></div>
 <div id="root"></div>
+<div id="debug-info" style="display:none">Diagnostics available — open console</div>
 
 <script>
-    window.onerror = function(msg, url, line) {
-        document.getElementById('loading').style.display = 'none';
-        const err = document.getElementById('fatal-error');
-        err.style.display = 'block';
-        err.innerHTML = "⚠️ System Error:\n" + msg + "\nLine: " + line;
+    window.onerror = function(msg, url, line, col, error) {
+        try{
+            document.getElementById('loading').style.display = 'none';
+            const err = document.getElementById('fatal-error');
+            err.style.display = 'block';
+            let stack = (error && error.stack) ? ("\n\nStack:\n" + error.stack) : "";
+            err.innerText = "⚠️ System Error:\n" + String(msg) + "\n\nSource: " + String(url) + "\nLine: " + String(line) + (col ? (":" + col) : "") + stack + "\n\nOpen DevTools Console for more details.";
+            console.error("Global onerror", {msg, url, line, col, error});
+        }catch(e){ console.error("Error in window.onerror handler", e); }
     };
 </script>
 
@@ -121,6 +140,87 @@ setTimeout(updateLayout, 300);
 
 // Rest of the existing app code remains unchanged (UI, MBTI data, components, etc.)
 // For brevity in this commit message, the full app code is preserved as-is.
+</script>
+
+<!-- Diagnostic mount-check script -->
+<script>
+(function(){
+  // Show small debug hint
+  try{ document.getElementById('debug-info').style.display = 'block'; }catch(e){}
+
+  // Helper to inspect and report environment
+  function environmentReport(){
+    const report = {
+      time: new Date().toISOString(),
+      url: window.location.href,
+      react: !!window.React,
+      reactVersion: window.React ? (window.React.version || 'unknown') : null,
+      reactDom: !!window.ReactDOM,
+      reactDomHasCreateRoot: !!(window.ReactDOM && window.ReactDOM.createRoot),
+      babel: !!window.Babel,
+      qrcode: !!window.QRCode,
+      rootInnerHTMLLength: (document.getElementById('root') ? document.getElementById('root').innerHTML.length : 0),
+      bodyBg: getComputedStyle(document.body).backgroundColor
+    };
+    return report;
+  }
+
+  // After a short delay, check whether the app mounted anything into #root
+  setTimeout(async function(){
+    const root = document.getElementById('root');
+    const loader = document.getElementById('loading');
+    let mounted = false;
+
+    // If app sets a global flag, respect it:
+    if(window.__APP_MOUNTED__ === true) mounted = true;
+
+    // Otherwise check if #root contains visible content
+    if(root && root.innerHTML && root.innerHTML.trim().length > 20) mounted = true;
+
+    // Also try ReactDOM roots detection (if using createRoot)
+    if(window.ReactDOM && typeof window.ReactDOM.createRoot === 'function'){
+      // We can't access internal roots, so skip
+    }
+
+    if(!mounted){
+      // prepare helpful diagnostic message
+      const env = environmentReport();
+      const missing = [];
+      if(!env.react) missing.push('React not loaded (window.React missing)');
+      if(!env.reactDom) missing.push('ReactDOM not loaded (window.ReactDOM missing)');
+      if(!env.babel) missing.push('Babel not loaded (window.Babel missing) — required if your app uses inline JSX with type="text/babel"');
+      if(!env.qrcode) missing.push('qrcodejs not loaded (window.QRCode missing)');
+
+      let msg = "⚠️ Application did not mount.\n\nDetected environment:\n" + JSON.stringify(env, null, 2) + "\n\n";
+      if(missing.length){
+        msg += "Likely issues:\n- " + missing.join("\n- ") + "\n\n";
+      } else {
+        msg += "No obvious missing global libs detected. The problem may be a runtime error in your app code (check Console).\n\n";
+      }
+
+      msg += "Common fixes:\n- Make sure the full app code is present in index.html or your bundled script is loaded (no 404).\n- If you use inline JSX, ensure Babel is present and the app <script type=\"text/babel\"> is after Babel.\n- Open DevTools Console and paste any red errors here so I can diagnose.\n\nAuto details: network may show 404 for /version.json and /favicon.ico — those alone are not fatal.\n";
+
+      // show message in fatal-error overlay
+      const fatal = document.getElementById('fatal-error');
+      if(fatal){
+        fatal.style.display = 'block';
+        fatal.innerText = msg;
+      } else {
+        alert(msg);
+      }
+
+      // hide loader
+      if(loader) loader.style.display = 'none';
+
+      console.warn("App mount check failed — environment:", env);
+    } else {
+      console.log("App appears to have mounted (quick check).");
+      // hide the debug hint
+      try{ document.getElementById('debug-info').style.display = 'none'; }catch(e){}
+      if(loader) loader.style.display = 'none';
+    }
+  }, 2500);
+})();
 </script>
 
 <!-- Auto-reload polling script: checks /version.json and reloads when version changes -->

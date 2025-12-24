@@ -56,22 +56,8 @@ button:focus { outline: none; }
 /* 錯誤提示 */
 #fatal-error {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); color: #ffdddd; z-index: 100000;
-    padding: 30px; font-size: 18px; white-space: pre-wrap; overflow: auto;
-}
-
-/* Small debug helper box */
-#debug-info {
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-family: Inter, sans-serif;
-  font-size: 13px;
-  z-index: 100001;
+    background: rgba(0,0,0,0.9); color: #ff5555; z-index: 100000;
+    padding: 50px; font-size: 30px; white-space: pre-wrap; overflow: auto;
 }
 </style>
 </head>
@@ -79,18 +65,13 @@ button:focus { outline: none; }
 <div id="fatal-error"></div>
 <div id="loading"><div>Loading System...</div></div>
 <div id="root"></div>
-<div id="debug-info" style="display:none">Diagnostics available — open console</div>
 
 <script>
-    window.onerror = function(msg, url, line, col, error) {
-        try{
-            document.getElementById('loading').style.display = 'none';
-            const err = document.getElementById('fatal-error');
-            err.style.display = 'block';
-            let stack = (error && error.stack) ? ("\n\nStack:\n" + error.stack) : "";
-            err.innerText = "⚠️ System Error:\n" + String(msg) + "\n\nSource: " + String(url) + "\nLine: " + String(line) + (col ? (":" + col) : "") + stack + "\n\nOpen DevTools Console for more details.";
-            console.error("Global onerror", {msg, url, line, col, error});
-        }catch(e){ console.error("Error in window.onerror handler", e); }
+    window.onerror = function(msg, url, line) {
+        document.getElementById('loading').style.display = 'none';
+        const err = document.getElementById('fatal-error');
+        err.style.display = 'block';
+        err.innerHTML = "⚠️ System Error:\n" + msg + "\nLine: " + line;
     };
 </script>
 
@@ -138,122 +119,1145 @@ window.addEventListener('load', updateLayout);
 window.addEventListener('resize', updateLayout);
 setTimeout(updateLayout, 300);
 
-// Rest of the existing app code remains unchanged (UI, MBTI data, components, etc.)
-// For brevity in this commit message, the full app code is preserved as-is.
-</script>
+// ============================================================================
+// 🌟 完整 16 種 MBTI 資料庫 🌟
+// ============================================================================
 
-<!-- Diagnostic mount-check script -->
-<script>
-(function(){
-  // Show small debug hint
-  try{ document.getElementById('debug-info').style.display = 'block'; }catch(e){}
+const mbtiResults = {
+    INTJ: {
+        category: "INTJ",
+        nicknameCN: "建築師",
+        nicknameEN: "The Architect",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/INTJ.png",
+        sloganCN: "「策略與邏輯，是我解讀世界的語言。」",
+        sloganEN: "\"Strategy and logic are my language for understanding the world.\"",
+        rationaleCN: "作為邏輯至上、追求效率與複雜性的分析家，您不喜歡平庸，偏愛能激發思考或帶有神秘感的氣味。您的香氣必須展現出獨特的品味與智慧。",
+        rationaleEN: "As a logic-driven analyst pursuing efficiency and complexity, you dislike mediocrity. You favor scents that provoke thought or carry a sense of mystery.",
+        fragranceCN: "木質調 / 西普調 / 芳香調",
+        fragranceEN: "Woody / Chypre / Aromatic",
+        products: [
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "擅長統籌全局與制定策略的你���會被 Aventus 那種煙燻菠蘿配合乾燥木質的結構吸引。這支香水不流於表面的甜美，而是以深度與力量，映照你的判斷力與清晰的企圖心。",
+                descriptionEN: "If you enjoy organizing complex situations into clear plans, Aventus' smoky pineapple with dry woody structure amplifies your well-planned and ambitious side."
+            },
+            {
+                brand: "Creed",
+                name: "Silver Mountain Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg",
+                descriptionCN: "習慣在複雜情境中保持距離與冷靜思考的人，會欣賞 Silver Mountain Water 冷冽茶香與金屬感山泉氣息的克制感。",
+                descriptionEN: "If you prefer maintaining distance and perspective, this metallic cold tea scent makes you appear calmer and smarter."
+            }
+        ]
+    },
+    INTP: {
+        category: "INTP",
+        nicknameCN: "邏輯學家",
+        nicknameEN: "The Logician",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/INTP.png",
+        sloganCN: "「在概念的迷宮中，我尋找真理的出口。」",
+        sloganEN: "\"In the labyrinth of concepts, I seek the exit of truth.\"",
+        rationaleCN: "作為追求知識與理論的思��者，您喜歡抽象且富有層次的氣味。您的香氣應該反映您對探索未知的熱情與好奇心。",
+        rationaleEN: "As a knowledge and theory-seeking thinker, you enjoy abstract and layered scents that reflect your passion for exploring the unknown.",
+        fragranceCN: "木質調 / 辛香調 / 芳香調",
+        fragranceEN: "Woody / Spicy / Aromatic",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Him Bleu Noir",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg",
+                descriptionCN: "話不多、但每一句都經過思考的性格，與 Bleu Noir 內斂辛香與木質麝香的氣質非常相襯。",
+                descriptionEN: "If you're not naturally talkative, Bleu Noir's dark woody musk makes your silence deep rather than lacking presence."
+            },
+            {
+                brand: "Creed",
+                name: "Silver Mountain Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Silver Mountain Water_edp.jpg",
+                descriptionCN: "冷冽茶香與金屬感山泉氣息，呼應您理性且純淨的思考方式。",
+                descriptionEN: "Cold tea and metallic spring water scent echoes your rational and pure thinking."
+            }
+        ]
+    },
+    ENTJ: {
+        category: "ENTJ",
+        nicknameCN: "指揮官",
+        nicknameEN: "The Commander",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ENTJ.png",
+        sloganCN: "「領導不是權力，而是責任與遠見。」",
+        sloganEN: "\"Leadership is not power, but responsibility and vision.\"",
+        rationaleCN: "作為天生的領導者，您需要強大、自信且令人難忘的香氣。您的香水應該展現您的決斷力和影響力。",
+        rationaleEN: "As a natural leader, you need powerful, confident, and memorable scents that showcase your decisiveness and influence.",
+        fragranceCN: "木質調 / 辛香調 / 皮革調",
+        fragranceEN: "Woody / Spicy / Leather",
+        products: [
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "Aventus 的煙燻菠蘿與木質結構，完美呼應您統籌全局的領導風範。",
+                descriptionEN: "Aventus' smoky pineapple and woody structure perfectly echo your commanding leadership style."
+            },
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Him Bleu Noir",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Him Bleu Noir_edp.jpg",
+                descriptionCN: "內斂卻強大的木質麝香，展現您沉穩的權威感。",
+                descriptionEN: "Understated yet powerful woody musk showcases your calm authority."
+            }
+        ]
+    },
+    ENTP: {
+        category: "ENTP",
+        nicknameCN: "辯論家",
+        nicknameEN: "The Debater",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ENTP.png",
+        sloganCN: "「挑戰常規，才能發現新的可能。」",
+        sloganEN: "\"Challenge conventions to discover new possibilities.\"",
+        rationaleCN: "作為創新與辯論的愛好者，您喜歡獨特、前衛且富有爭議性的香氣。您的香水應該反映您的創造力和冒險精神。",
+        rationaleEN: "As a lover of innovation and debate, you enjoy unique, avant-garde, and controversial scents reflecting your creativity.",
+        fragranceCN: "辛香調 / 芳香調 / 木質調",
+        fragranceEN: "Spicy / Aromatic / Woody",
+        products: [
+            {
+                brand: "Creed",
+                name: "Aventus",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Aventus Collection-Aventus_edp.jpg",
+                descriptionCN: "複雜而有層次的結構，如同您多面向的思維方式。",
+                descriptionEN: "Complex layered structure mirrors your multifaceted thinking."
+            },
+            {
+                brand: "27 87",
+                name: "Wandervogel",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg",
+                descriptionCN: "前衛的紫蘇與海風感，表達您不願被框限的創新精神。",
+                descriptionEN: "Avant-garde shiso and sea breeze express your unbounded innovative spirit."
+            }
+        ]
+    },
+    INFJ: {
+        category: "INFJ",
+        nicknameCN: "提倡者",
+        nicknameEN: "The Advocate",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/INFJ.png",
+        sloganCN: "「理想主義不是逃避現實，而是創造未來。」",
+        sloganEN: "\"Idealism is not escaping reality, but creating the future.\"",
+        rationaleCN: "作為富有洞察力的理想主義者，您需要深邃、溫暖且具有精神層次的香氣。您的香水應該反映您的同理心和願景。",
+        rationaleEN: "As an insightful idealist, you need profound, warm, and spiritually layered scents reflecting your empathy and vision.",
+        fragranceCN: "東方調 / 花香調 / 木質調",
+        fragranceEN: "Oriental / Floral / Woody",
+        products: [
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "Ani 的香草與辛香層次，像一個循序漸進的擁抱，特別適合營造信任氛圍。",
+                descriptionEN: "Ani's vanilla and spice layers create a progressive embrace, perfect for building trust."
+            },
+            {
+                brand: "Nishane",
+                name: "Nanshe",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg",
+                descriptionCN: "帶粉感的玫瑰與皂感氣息，提供安穩與支持的溫暖感受。",
+                descriptionEN: "Powdery rose and soapy scent provide stable and supportive warmth."
+            }
+        ]
+    },
+    INFP: {
+        category: "INFP",
+        nicknameCN: "調停者",
+        nicknameEN: "The Mediator",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_INFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/INFP.png",
+        sloganCN: "「在內心的世界裡，我找到真正的自由。」",
+        sloganEN: "\"In my inner world, I find true freedom.\"",
+        rationaleCN: "作為浪漫且富有想像力的夢想家，您喜歡柔和、詩意且富有情感的香氣。您的香水應該是您內心世界的延伸。",
+        rationaleEN: "As a romantic and imaginative dreamer, you enjoy soft, poetic, and emotional scents as an extension of your inner world.",
+        fragranceCN: "花香調 / 美食調 / 東方調",
+        fragranceEN: "Floral / Gourmand / Oriental",
+        products: [
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "Lira 彷彿檸檬磅蛋糕般的美食香調，甜而不膩，讓你的體貼變得具體可感。",
+                descriptionEN: "Lira's lemon pound cake gourmand scent makes your thoughtfulness tangible and approachable."
+            },
+            {
+                brand: "Nishane",
+                name: "Nanshe",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Nanshe_Extrait.jpg",
+                descriptionCN: "柔軟的玫瑰與皂感，像一條溫暖的毛毯包裹著您��情感世界。",
+                descriptionEN: "Soft rose and soapy scent wrap your emotional world like a warm blanket."
+            }
+        ]
+    },
+    ENFJ: {
+        category: "ENFJ",
+        nicknameCN: "主人公",
+        nicknameEN: "The Protagonist",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_enfj.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ENFJ.png",
+        sloganCN: "「影響他人，從理解他人開始。」",
+        sloganEN: "\"Influencing others begins with understanding them.\"",
+        rationaleCN: "作為天生的導師和激勵者，您需要溫暖、迷人且具有感染力的香氣���您的香水應該反映您的魅力和領導力。",
+        rationaleEN: "As a natural mentor and motivator, you need warm, charming, and contagious scents reflecting your charisma and leadership.",
+        fragranceCN: "花香調 / 東方調 / 美食調",
+        fragranceEN: "Floral / Oriental / Gourmand",
+        products: [
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "溫暖的香草與辛香，幫助您建立安全感與信任，鼓勵他人向您敞開心扉。",
+                descriptionEN: "Warm vanilla and spice help you build safety and trust, encouraging others to open up."
+            },
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "甜美的美食調，讓您的親和力變得具體且令人難忘。",
+                descriptionEN: "Sweet gourmand makes your approachability tangible and memorable."
+            }
+        ]
+    },
+    ENFP: {
+        category: "ENFP",
+        nicknameCN: "競選者",
+        nicknameEN: "The Campaigner",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ENFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ENFP.png",
+        sloganCN: "「生命是一場冒險，每一天都充滿可能。」",
+        sloganEN: "\"Life is an adventure, every day full of possibilities.\"",
+        rationaleCN: "作為充滿熱情的自由靈魂，您喜歡明亮、活潑且富有創意的香氣。您的香水應該反映您的樂觀和熱情。",
+        rationaleEN: "As a passionate free spirit, you enjoy bright, lively, and creative scents reflecting your optimism and enthusiasm.",
+        fragranceCN: "花香調 / 美食調 / 果香調",
+        fragranceEN: "Floral / Gourmand / Fruity",
+        products: [
+            {
+                brand: "Casamorati (Xerjoff)",
+                name: "Lira",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Casamorati - Lira_edp.jpg",
+                descriptionCN: "如同檸檬磅蛋糕的甜美香氣，展現您溫暖而充滿活力的個性。",
+                descriptionEN: "Lemon pound cake sweetness showcases your warm and vibrant personality."
+            },
+            {
+                brand: "Nishane",
+                name: "Ani",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nishane_Ani_Extrait.jpg",
+                descriptionCN: "層層遞進的香草與辛香，如同您豐富多變的情感表達。",
+                descriptionEN: "Progressive vanilla and spice mirror your rich and varied emotional expression."
+            }
+        ]
+    },
+    ISTJ: {
+        category: "ISTJ",
+        nicknameCN: "物流師",
+        nicknameEN: "The Logistician",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/a4f9c9ae2d35aa87e75285403e1fc54f95975e84/ISTJ.png",
+        sloganCN: "「可靠，源於對細節的堅持。」",
+        sloganEN: "\"Reliability comes from attention to detail.\"",
+        rationaleCN: "作為務實且有條理的守護者，您偏愛清晰、穩定且專業的香氣。您的香水應該展現您的可靠性和責任感。",
+        rationaleEN: "As a pragmatic and organized guardian, you favor clear, stable, and professional scents showcasing your reliability.",
+        fragranceCN: "木質調 / 清新調 / 柑橘調",
+        fragranceEN: "Woody / Fresh / Citrus",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "貼膚麝香的氣質，低調卻難以忽視，讓人自然聯想到細心、體貼與可靠。",
+                descriptionEN: "Skin-like musk is understated yet impossible to ignore, naturally evoking meticulousness and reliability."
+            },
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "草本柑橘香特別適合有序的工作日早晨，帶來清新有序的感覺。",
+                descriptionEN: "Herbal citrus scent perfect for organized work mornings, bringing fresh orderliness."
+            }
+        ]
+    },
+    ISFJ: {
+        category: "ISFJ",
+        nicknameCN: "守衛者",
+        nicknameEN: "The Defender",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/ISFJ.png",
+        sloganCN: "「守護，是我最溫柔的力量。」",
+        sloganEN: "\"Protection is my gentlest strength.\"",
+        rationaleCN: "作為溫暖且細心的照顧者，您喜歡柔和、舒適且令人安心的香氣。您的香水應該反映您的溫柔和奉獻精神。",
+        rationaleEN: "As a warm and attentive caregiver, you enjoy soft, comfortable, and reassuring scents reflecting your gentleness.",
+        fragranceCN: "花香調 / 清新麝香 / 柑橘調",
+        fragranceEN: "Floral / Clean Musk / Citrus",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "如天生體香般的貼膚麝香，非常適合日常使用，展現您的細心體貼。",
+                descriptionEN: "Natural skin-like musk perfect for daily wear, showcasing your attentive thoughtfulness."
+            },
+            {
+                brand: "Xerjoff",
+                name: "Torino 23",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg",
+                descriptionCN: "白花與木質底蘊，讓您在正式或休閒場合都保持得體而溫暖的形象。",
+                descriptionEN: "White floral and woody base keep you poised and warm across formal and casual settings."
+            }
+        ]
+    },
+    ESTJ: {
+        category: "ESTJ",
+        nicknameCN: "總經理",
+        nicknameEN: "The Executive",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESTJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/ESTJ.png",
+        sloganCN: "「秩序與效率，是成功的基石。」",
+        sloganEN: "\"Order and efficiency are the cornerstones of success.\"",
+        rationaleCN: "作為果斷且有組織的管理者，您需要專業、權威且令人印象深刻的香氣。您的香水應該展現您的領導力和效率。",
+        rationaleEN: "As a decisive and organized manager, you need professional, authoritative, and impressive scents showcasing your leadership.",
+        fragranceCN: "木質調 / 辛香調 / 清新調",
+        fragranceEN: "Woody / Spicy / Fresh",
+        products: [
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "草本柑橘香如同「正式開始」的啟動鍵，適合需要專注處理細節的工作日。",
+                descriptionEN: "Herbal citrus scent is like a start button, perfect for detail-focused workdays."
+            },
+            {
+                brand: "Xerjoff",
+                name: "Torino 23",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Xerjoff_Torino 23_edp.jpg",
+                descriptionCN: "白花與木質結構，讓您無論在何種場合都保持專業得體的形象。",
+                descriptionEN: "White floral and woody structure keep you professionally poised in any setting."
+            }
+        ]
+    },
+    ESFJ: {
+        category: "ESFJ",
+        nicknameCN: "執政官",
+        nicknameEN: "The Consul",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESFJ.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ESFJ.png",
+        sloganCN: "「和諧，來自於對每個人的關心。」",
+        sloganEN: "\"Harmony comes from caring for everyone.\"",
+        rationaleCN: "作為熱情且善於社交的協調者，您喜歡溫暖、親切且易於親近的香氣。您的香水應該反映您的友善和同理心。",
+        rationaleEN: "As an enthusiastic and sociable coordinator, you enjoy warm, friendly, and approachable scents reflecting your kindness.",
+        fragranceCN: "花香調 / 清新調 / 美食調",
+        fragranceEN: "Floral / Fresh / Gourmand",
+        products: [
+            {
+                brand: "Narciso Rodriguez",
+                name: "For Her EDT",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_narciso rodriguez_For Her_edt.jpg",
+                descriptionCN: "貼膚麝香讓您散發出自然的親和力，適合家庭聚會與社交場合。",
+                descriptionEN: "Skin-like musk radiates natural approachability, perfect for family gatherings and social occasions."
+            },
+            {
+                brand: "Acqua di Parma",
+                name: "Buongiorno",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Acqua di Parma_Buongiorno_edp.jpg",
+                descriptionCN: "清新的柑橘草本香，為您的每一天帶來積極正面的開始。",
+                descriptionEN: "Fresh citrus and herbal scent brings a positive start to each day."
+            }
+        ]
+    },
+    ISTP: {
+        category: "ISTP",
+        nicknameCN: "鑑賞家",
+        nicknameEN: "The Virtuoso",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISTP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/0e62b2a9c19f3fbc080fbd02c44d25e49f2bdde6/ISTP.png",
+        sloganCN: "「行動勝於言語，技藝勝於理論。」",
+        sloganEN: "\"Actions speak louder than words, skill trumps theory.\"",
+        rationaleCN: "作為實用主義的工匠，您喜歡簡潔、有力且不做作的香氣。您的香水應該反映您的獨立性和技術專長。",
+        rationaleEN: "As a pragmatic craftsman, you enjoy simple, powerful, and unpretentious scents reflecting your independence.",
+        fragranceCN: "木質調 / 皮革調 / 辛香調",
+        fragranceEN: "Woody / Leather / Spicy",
+        products: [
+            {
+                brand: "LM Parfums",
+                name: "Hard Leather",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg",
+                descriptionCN: "帶動物感的皮革與沈香組合，氣味存在感極強，清楚保留您敢衝敢試的態度。",
+                descriptionEN: "Animalic leather and oud combination with strong presence clearly preserves your bold attitude."
+            },
+            {
+                brand: "Nasomatto",
+                name: "Black Afgano",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Nasomatto_Black Afgano_Extrait de parfum.jpg",
+                descriptionCN: "厚重樹脂與煙燻，適合打破他人對您的既定印象，保留難以被看穿的神秘感。",
+                descriptionEN: "Heavy resin and smoke perfect for breaking expectations and maintaining elusive mystery."
+            }
+        ]
+    },
+    ISFP: {
+        category: "ISFP",
+        nicknameCN: "探險家",
+        nicknameEN: "The Adventurer",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ISFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/a4f9c9ae2d35aa87e75285403e1fc54f95975e84/ISFP.png",
+        sloganCN: "「藝術與美，是我生活的語言。」",
+        sloganEN: "\"Art and beauty are the language of my life.\"",
+        rationaleCN: "作為藝術家靈魂的探險家，您喜歡獨特、富有表現力且充滿情感的香氣。您的香水應該是您個人藝術表達的一部分。",
+        rationaleEN: "As an adventurer with an artist's soul, you enjoy unique, expressive, and emotional scents as part of your personal art.",
+        fragranceCN: "木質調 / 柑橘調 / 東方調",
+        fragranceEN: "Woody / Citrus / Oriental",
+        products: [
+            {
+                brand: "BLACK FADES",
+                name: "夕 (zik6)",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_blackfades_zik.jpg",
+                descriptionCN: "以黃昏為意象的香氣，苦檸檬、青檸與絲柏帶出冷調清新，隨後松木、苔蘚、岩蘭草堆疊出木質與琥珀感的空間。",
+                descriptionEN: "Dusk-inspired scent with bitter lemon, lime, and cypress creating cool freshness, then pine, moss, and vetiver building woody amber space."
+            },
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "青檸、椰子與白蘭姆營造如同行走假期般的氛圍，適合夏天與輕鬆場合。",
+                descriptionEN: "Lime, coconut, and white rum create a walking vacation vibe, perfect for summer and casual occasions."
+            }
+        ]
+    },
+    ESTP: {
+        category: "ESTP",
+        nicknameCN: "企業家",
+        nicknameEN: "The Entrepreneur",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_estp.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/db0f05e169bc2f9605c83b59d89b7d72a57a4417/ESTP.png",
+        sloganCN: "「冒險與機會，就在當下。」",
+        sloganEN: "\"Adventure and opportunity are in the present moment.\"",
+        rationaleCN: "作為充滿活力的行動派，您需要大膽、動感且令人興奮的香氣。您的香水應該反映您的冒險精神和即興���變能力。",
+        rationaleEN: "As an energetic action-taker, you need bold, dynamic, and exciting scents reflecting your adventurous spirit.",
+        fragranceCN: "辛香調 / 水生調 / 皮革調",
+        fragranceEN: "Spicy / Aquatic / Leather",
+        products: [
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "青檸、椰子與白蘭姆的熱帶調性，完美適合沙灘、音樂節或任何輕鬆玩樂的場合。",
+                descriptionEN: "Lime, coconut, and white rum tropical notes perfect for beaches, festivals, or any fun occasion."
+            },
+            {
+                brand: "LM Parfums",
+                name: "Hard Leather",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_LM Parfums_Hard Leather_Extrait de parfum.jpg",
+                descriptionCN: "帶動物感的皮革，氣味存在感極強，適合夜晚、派對或需要留下深刻印象的場合。",
+                descriptionEN: "Animalic leather with strong presence, perfect for nights, parties, or making lasting impressions."
+            }
+        ]
+    },
+    ESFP: {
+        category: "ESFP",
+        nicknameCN: "表演者",
+        nicknameEN: "The Entertainer",
+        characterImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/refs/heads/main/mbti_ESFP.png",
+        backgroundImage: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/1caa2d4fad6b6c351cb9ba09199cb84196535f5a/ESFP.png",
+        sloganCN: "「生活就是舞台，每一刻都值得慶祝。」",
+        sloganEN: "\"Life is a stage, every moment worth celebrating.\"",
+        rationaleCN: "作為天生的表演者，您喜歡明亮、歡樂且令人難忘的香氣。您的香水應該反映您的魅力和對生活的熱愛。",
+        rationaleEN: "As a natural performer, you enjoy bright, joyful, and memorable scents reflecting your charisma and love of life.",
+        fragranceCN: "果香調 / 水生調 / 美食調",
+        fragranceEN: "Fruity / Aquatic / Gourmand",
+        products: [
+            {
+                brand: "Creed",
+                name: "Virgin Island Water",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_Creed_Virgin Island Water_edp.jpg",
+                descriptionCN: "如同Piña Colada般的熱帶氣息，營造出行走假期般的歡樂氛圍。",
+                descriptionEN: "Piña Colada-like tropical vibe creates a walking vacation atmosphere."
+            },
+            {
+                brand: "27 87",
+                name: "Wandervogel",
+                imageUrl: "https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/k11 musea product image_27 87_Wandervogel_edp.jpg",
+                descriptionCN: "前衛的紫蘇與海風感，帶著未來感與實驗氣質，表達您充滿活力的一面。",
+                descriptionEN: "Avant-garde shiso and sea breeze with futuristic experimental quality expressing your vibrant side."
+            }
+        ]
+    }
+};
 
-  // Helper to inspect and report environment
-  function environmentReport(){
-    const report = {
-      time: new Date().toISOString(),
-      url: window.location.href,
-      react: !!window.React,
-      reactVersion: window.React ? (window.React.version || 'unknown') : null,
-      reactDom: !!window.ReactDOM,
-      reactDomHasCreateRoot: !!(window.ReactDOM && window.ReactDOM.createRoot),
-      babel: !!window.Babel,
-      qrcode: !!window.QRCode,
-      rootInnerHTMLLength: (document.getElementById('root') ? document.getElementById('root').innerHTML.length : 0),
-      bodyBg: getComputedStyle(document.body).backgroundColor
+const questionMetaMap = {
+    1: { dimension: 'SN', option1Letter: 'N', option2Letter: 'S' },
+    2: { dimension: 'TF', option1Letter: 'T', option2Letter: 'F' },
+    3: { dimension: 'JP', option1Letter: 'J', option2Letter: 'P' },
+    4: { dimension: 'EI', option1Letter: 'E', option2Letter: 'I' }
+};
+
+const calcMbti = (answers) => {
+    const dimensionScores = {
+        EI: { E: 0, I: 0 },
+        SN: { S: 0, N: 0 },
+        TF: { T: 0, F: 0 },
+        JP: { J: 0, P: 0 }
     };
-    return report;
-  }
 
-  // After a short delay, check whether the app mounted anything into #root
-  setTimeout(async function(){
-    const root = document.getElementById('root');
-    const loader = document.getElementById('loading');
-    let mounted = false;
+    answers.forEach(answer => {
+        const meta = questionMetaMap[answer.questionId];
+        if (!meta) return;
 
-    // If app sets a global flag, respect it:
-    if(window.__APP_MOUNTED__ === true) mounted = true;
+        const selectedLetter = answer.selectedIndex === 0 ? meta.option1Letter : meta.option2Letter;
+        const dimension = meta.dimension;
+        
+        if (dimensionScores[dimension][selectedLetter] !== undefined) {
+            dimensionScores[dimension][selectedLetter]++;
+        }
+    });
 
-    // Otherwise check if #root contains visible content
-    if(root && root.innerHTML && root.innerHTML.trim().length > 20) mounted = true;
+    const E_or_I = dimensionScores.EI.E >= dimensionScores.EI.I ? 'E' : 'I';
+    const S_or_N = dimensionScores.SN.S >= dimensionScores.SN.N ? 'S' : 'N';
+    const T_or_F = dimensionScores.TF.T >= dimensionScores.TF.F ? 'T' : 'F';
+    const J_or_P = dimensionScores.JP.J >= dimensionScores.JP.P ? 'J' : 'P';
 
-    // Also try ReactDOM roots detection (if using createRoot)
-    if(window.ReactDOM && typeof window.ReactDOM.createRoot === 'function'){
-      // We can't access internal roots, so skip
+    return `${E_or_I}${S_or_N}${T_or_F}${J_or_P}`;
+};
+
+// ============================================================================
+// 🌟 圖片資源 🌟
+// ============================================================================
+
+const iconA = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/iconA.png';
+const iconB = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/IconB.png';
+const logoImage = 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/Scentation_logo_2025.05.26_v1_%E7%99%BD%E5%AD%97_logo.png';
+
+const questionImages = {
+    q1: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/1.png',
+    q2: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/2.png',
+    q3: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/3.png',
+    q4: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/4.png',
+    intro: 'https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/ChatGPT%20Image%202025%E5%B9%B412%E6%9C%8815%E6%97%A5%20%E4%B8%8B%E5%8D%8803_37_10%201%20(1).png',
+};
+
+// ============================================================================
+// 🌟 翻譯資料 🌟
+// ============================================================================
+
+const zh_Questions = [
+    { id: 1, title: '鑑賞藝術品時，您的目光最先被什麼吸引？', options: [{ key: 'N', text: '作品背後的哲思、藝術家的抽象概念，以及它給予的無限聯想空間。' }, { key: 'S', text: '作品的材質、精準的技法、生動的色彩表現，以及它所描繪的真實場景。' }], image: questionImages.q1, progressWidth: 366 },
+    { id: 2, title: '在緊張的人際衝突中，\n您認為香氣的作用是什麼？', options: [{ key: 'T', text: '幫助我保持清醒和冷靜，散發出專業、不被情緒影響的穩定氣場。' }, { key: 'F', text: '柔化周圍的氛圍,創造一個溫暖、撫慰的空間，幫助人與人建立連結。' }], image: questionImages.q2, progressWidth: 692 },
+    { id: 3, title: '關於您的香水收藏，\n哪個描述最貼切？', options: [{ key: 'J', text: '我會根據場合、服裝、甚至是一週的計劃，為香水進行精準的分類和選擇。' }, { key: 'P', text: '我隨心所欲地使用香水，喜歡即興疊香，相信氣味帶來的感官驚喜。' }], image: questionImages.q3, progressWidth: 1081 },
+    { id: 4, title: '週末晚上，您渴望散發\n哪一種香氣風格？', options: [{ key: 'E', text: '濃郁、具有魅力且張揚的香氣，希望成為社交聚會中最令人難忘的焦點。' }, { key: 'I', text: '內斂、有層次且舒適的香氣，它是我獨處時的儀式感，只為懂我的人停留。' }], image: questionImages.q4, progressWidth: 1400 },
+];
+
+const en_Questions = [
+    { id: 1, title: 'When appreciating art,\nwhat first attracts you?', options: [{ key: 'N', text: 'The philosophical ideas behind the work, the artist\'s abstract concepts, and the unlimited associative space it provides.' }, { key: 'S', text: 'The material of the work, the precise technique, the vivid color representation, and the realistic scene it depicts.' }], image: questionImages.q1, progressWidth: 366 },
+    { id: 2, title: 'In tense conflict,\nwhat role does fragrance play?', options: [{ key: 'T', text: 'Helps me stay clear-headed and calm, exuding a professional, stable aura unaffected by emotions.' }, { key: 'F', text: 'Softens the atmosphere, creating a warm, comforting space to help build connections between people.' }], image: questionImages.q2, progressWidth: 692 },
+    { id: 3, title: 'Which best fits\nyour fragrance collection?', options: [{ key: 'J', text: 'I categorize and select fragrances precisely based on the occasion, outfit, or even my weekly plan.' }, { key: 'P', text: 'I use fragrances spontaneously, enjoying impromptu layering, trusting the sensory surprise.' }], image: questionImages.q3, progressWidth: 1081 },
+    { id: 4, title: 'On weekend evening,\nwhat scent style do you prefer?', options: [{ key: 'E', text: 'A rich, captivating, and expressive scent, hoping to be the most memorable focus of a gathering.' }, { key: 'I', text: 'A restrained, layered, and comfortable scent; my ritual when alone, lingering for those who know me.' }], image: questionImages.q4, progressWidth: 1400 },
+];
+
+const zh_TW_Content = {
+    intro: { title: '探索您的香氣密碼', description: '於瞬息萬變的都會節奏中，您的香氣定義了您的氣場。\n迅速剖析核心人格特質，精準推薦最能彰顯您個人魅力的香調。', button: '按此啟動 探索香氣' },
+    nameInput: { title: '請輸入您的姓名', subtitle: '讓我們為您量身打造香氣體驗', placeholder: '輸入姓名', button: '開始測試' },
+    header: { tagline: '為您的非凡風格，尋覓您的品味哲學。' },
+    exit: '✕', restart: '重新探索', share: '分享結果',
+    result: { 
+        title: '您的香氣個性', 
+        greeting: '親愛的 ', 
+        recommendation: 'SCENTATION 為您推薦的香調'
+    },
+    shareQR: { title: '分享您的香氣個性', subtitle: '掃描 QR Code 獲取可分享的結果圖片', instruction: '使用手機掃描下方 QR Code，\n即可在社交媒體上分享您的專屬香氣結果', backButton: '返回結果頁面' },
+    questions: zh_Questions
+};
+
+const en_Content = {
+    intro: { title: 'Unlock Your Scent Code', description: 'In the fast-paced urban rhythm, your scent defines your aura.\nQuickly analyze your core personality traits and receive precise recommendations for a luxury scent that highlights your unique charm.', button: 'Discover Your Unique Charm' },
+    nameInput: { title: 'Enter Your Name', subtitle: 'Let us tailor a scent experience just for you', placeholder: 'Your name', button: 'Start Now' },
+    header: { tagline: 'The Philosophy of Taste:\nFinding your signature scent for your extraordinary style.' },
+    exit: '✕', restart: 'Restart Quiz', share: 'Share With Friends',
+    result: { 
+        title: 'Your Exclusive Fragrance:', 
+        greeting: 'Dear ', 
+        recommendation: 'Your SCENTATION Recommended Scent:'
+    },
+    shareQR: { title: 'Share Your Scent Persona', subtitle: 'Scan the QR Code to get a sharable result image', instruction: 'Scan the QR Code with your phone\nto save and share your result on social media.', backButton: 'Back to Result Page' },
+    questions: en_Questions
+};
+
+const translations = { 'zh-TW': zh_TW_Content, 'en': en_Content };
+
+// QR Code 組件
+const QRCodeComp = ({ value, size }) => {
+    const qrRef = useRef(null);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (qrRef.current && window.QRCode && value) {
+                try {
+                    qrRef.current.innerHTML = "";
+                    new QRCode(qrRef.current, { 
+                        text: value, 
+                        width: size, 
+                        height: size, 
+                        colorDark: "#000000", 
+                        colorLight: "#ffffff", 
+                        correctLevel: QRCode.CorrectLevel.H 
+                    });
+                } catch (e) {
+                    console.error(e);
+                    qrRef.current.innerHTML = "<p style='color:black'>QR Code Error</p>";
+                }
+            } else if (!window.QRCode) {
+                if(qrRef.current) qrRef.current.innerHTML = "<p style='color:black; font-size:20px'>Library Loading...</p>";
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [value, size]);
+    return <div ref={qrRef} style={{ padding: '40px', background: '#fff', borderRadius: '30px' }} />;
+};
+
+// ============================================================================
+// 🌟 主應用程式 🌟
+// ============================================================================
+
+const App = () => {
+    const [currentPage, setCurrentPage] = useState('intro');
+    const [currentLang, setCurrentLang] = useState('zh-TW');
+    const [answers, setAnswers] = useState([]);
+    const [playerName, setPlayerName] = useState('');
+    const [result, setResult] = useState(null);
+    const [shareUrl, setShareUrl] = useState('');
+    const [isShareMode, setIsShareMode] = useState(false);
+
+    useEffect(() => { setTimeout(updateLayout, 300); }, []);
+
+    const texts = translations[currentLang];
+    const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+
+            if (mode === 'share') {
+                setIsShareMode(true);
+                const name = params.get('name') || '';
+                const type = params.get('type') || 'INTJ';
+                const lang = params.get('lang') || 'zh-TW';
+                const p1 = parseInt(params.get('p1') || '0');
+                const p2 = parseInt(params.get('p2') || '1');
+
+                if (lang === 'en' || lang === 'zh-TW') setCurrentLang(lang);
+
+                if (mbtiResults[type]) {
+                    const originalResultData = mbtiResults[type];
+                    // 根據索引選擇產品
+                    const selectedProducts = [
+                        originalResultData.products[p1] || originalResultData.products[0],
+                        originalResultData.products[p2] || originalResultData.products[1]
+                    ];
+                    
+                    setPlayerName(name);
+                    setResult({ 
+                        mbtiType: type, 
+                        resultData: { ...originalResultData, products: selectedProducts }
+                    });
+                    setCurrentPage('result');
+                }
+            } else {
+                let timer;
+                const reset = () => { 
+                    clearTimeout(timer); 
+                    timer = setTimeout(() => restartQuiz(), 120000); 
+                };
+                const events = ['mousedown', 'mousemove', 'keypress', 'touchstart', 'click'];
+                events.forEach(e => window.addEventListener(e, reset));
+                reset();
+                return () => { 
+                    clearTimeout(timer); 
+                    events.forEach(e => window.removeEventListener(e, reset)); 
+                };
+            }
+        } catch(e) {
+            console.error("Init Error", e);
+        }
+    }, []);
+
+    const restartQuiz = useCallback(() => {
+        setCurrentPage('intro');
+        setAnswers([]);
+        setResult(null);
+        setPlayerName('');
+        setShareUrl('');
+    }, []);
+
+    const handleAnswer = useCallback((questionId, selectedIndex, isLastQuestion = false) => {
+        setAnswers(prev => {
+            const newAnswers = [...prev, { questionId, selectedIndex }];
+            
+            if (isLastQuestion) {
+                setTimeout(() => {
+                    const mbtiType = calcMbti(newAnswers);
+                    const originalResultData = mbtiResults[mbtiType];
+                    
+                    // 隨機選擇2個產品並記錄索引
+                    let selectedProducts, p1Index, p2Index;
+                    
+                    // 特殊處理：ISFP 固定包含���夕」產品
+                    if (mbtiType === 'ISFP') {
+                        const zikProduct = originalResultData.products.find(p => p.brand === 'BLACK FADES');
+                        const otherProducts = originalResultData.products.filter(p => p.brand !== 'BLACK FADES');
+                        const randomOther = otherProducts[Math.floor(Math.random() * otherProducts.length)];
+                        
+                        selectedProducts = zikProduct ? [zikProduct, randomOther] : otherProducts.slice(0, 2);
+                        p1Index = originalResultData.products.findIndex(p => p.name === selectedProducts[0].name);
+                        p2Index = originalResultData.products.findIndex(p => p.name === selectedProducts[1].name);
+                    } else {
+                        // 其他類型：隨機選擇2個產品
+                        const shuffled = [...originalResultData.products].sort(() => Math.random() - 0.5);
+                        selectedProducts = shuffled.slice(0, 2);
+                        p1Index = originalResultData.products.findIndex(p => p.name === selectedProducts[0].name);
+                        p2Index = originalResultData.products.findIndex(p => p.name === selectedProducts[1].name);
+                    }
+                    
+                    setResult({ 
+                        mbtiType, 
+                        resultData: { ...originalResultData, products: selectedProducts }
+                    });
+                    
+                    // 生成包含產品索引的分享URL
+                    const baseUrl = getBaseUrl();
+                    const params = new URLSearchParams({
+                        mode: 'share',
+                        name: playerName || '',
+                        type: mbtiType,
+                        p1: p1Index,
+                        p2: p2Index,
+                        lang: currentLang
+                    });
+                    setShareUrl(`${baseUrl}?${params.toString()}`);
+                    setCurrentPage('result');
+                }, 100);
+            } else {
+                setCurrentPage(questionId + 1);
+            }
+            
+            return newAnswers;
+        });
+    }, [playerName, currentLang]);
+
+    const startQuiz = useCallback(() => { setCurrentPage('nameInput'); }, []);
+    const beginQuestions = useCallback(() => {
+        setPlayerName(prev => (prev && prev.trim() ? prev.trim() : ''));
+        setCurrentPage(1);
+    }, []);
+    const exitToIntro = useCallback(() => { restartQuiz(); }, [restartQuiz]);
+    const goToSharePage = useCallback(() => { if (shareUrl) setCurrentPage('share'); }, [shareUrl]);
+    const backToResultPage = useCallback(() => { setCurrentPage('result'); }, []);
+
+    return (
+        <div style={{ position: 'relative', width: '2160px', height: '3840px', boxSizing: 'border-box' }}>
+            {/* 背景圖 */}
+            <div style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 }}>
+                <img src="https://raw.githubusercontent.com/BDGOAL/SCENTATION/main/pattern.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+
+            <div style={{
+                position: 'absolute', width: '1722px', height: '3392px',
+                left: currentPage === 'intro' ? '220px' : '219px',
+                top: currentPage === 'intro' ? '222px' : '216px',
+                background: 'linear-gradient(165.55deg, #1A1A1A 0%, #2B2B2B 100%)',
+                boxShadow: '0px 0px 39.9px 1px #D4AF37', borderRadius: '35px'
+            }}>
+                {/* Logo */}
+                <div style={{
+                    position: 'absolute', top: '0px', zIndex: 100,
+                    width: (currentPage === 'result' || currentPage === 'share') ? '864px' : '75%',
+                    left: (currentPage === 'result' || currentPage === 'share') ? 'calc(50% - 864px/2 + 1px)' : '12.5%'
+                }}>
+                    <img src={logoImage} style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }} />
+                </div>
+
+                {/* 語言選項 - 修正：只在首頁更新位置，其他頁面保持原位 */}
+                {currentPage !== 'result' && currentPage !== 'share' && !isShareMode && (
+                    <div style={{ 
+                        position: 'absolute', 
+                        width: '553.5px', 
+                        height: '108px', 
+                        // 🔥 關鍵修正：只在 intro 頁面時使用新位置
+                        right: currentPage === 'intro' ? '80px' : '60px',
+                        top: currentPage === 'intro' ? '3080px' : 'auto',
+                        bottom: currentPage === 'intro' ? 'auto' : '80px',
+                        zIndex: 50 
+                    }}>
+                        <div style={{ position:'absolute', width:'266px', height:'108px', left:0, top:0 }}>
+                            <div style={{ position:'absolute', width:'100%', height:'100%', borderRadius:'25px', background: currentLang==='zh-TW'?'#B8860B':'#383838' }}></div>
+                            <button onClick={()=>setCurrentLang('zh-TW')} style={{ position:'absolute', width:'100%', height:'100%', background:'transparent', border:'none', color:'#FFF', fontSize:'50px', fontFamily:"'Inter',sans-serif" }}>繁體</button>
+                        </div>
+                        <div style={{ position:'absolute', width:'266px', height:'108px', left:'286px', top:0 }}>
+                            <div style={{ position:'absolute', width:'100%', height:'100%', borderRadius:'25px', background: currentLang==='en'?'#B8860B':'#383838' }}></div>
+                            <button onClick={()=>setCurrentLang('en')} style={{ position:'absolute', width:'100%', height:'100%', background:'transparent', border:'none', color:'#FFF', fontSize:'50px', fontFamily:"'Inter',sans-serif" }}>English</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* 退出按鈕 */}
+                {!isShareMode && (
+                    <div style={{ position: 'absolute', left: '74px', top: '71px', zIndex: 52, display: currentPage==='intro'?'none':'block' }}>
+                        <div style={{ position: 'absolute', width: '132px', height: '132px', border: '5px solid #B8860B', borderRadius: '50%', boxSizing: 'border-box' }}></div>
+                        <button onClick={exitToIntro} style={{ position: 'absolute', width: '132px', height: '132px', background: 'transparent', border: 'none', color: '#B8860B', fontSize: '60px', fontFamily: "'Inter', sans-serif" }}>{texts.exit}</button>
+                    </div>
+                )}
+
+                {/* Intro 頁面 */}
+                {currentPage === 'intro' && (
+                    <>
+                        <div style={{ position: 'absolute', width: '1330px', height: '38px', left: 'calc(50% - 1330px/2)', top: currentLang === 'en' ? '500px' : '470px' }}>
+                            <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '6px solid #B8860B' }}></div>
+                            <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '12px solid #B8860B' }}></div>
+                        </div>
+                        
+                        <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: currentLang === 'en' ? '620px' : '571px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '64px', textAlign: 'center', color: '#B8860B', lineHeight: currentLang === 'en' ? '58px' : '77px' }}>{texts.header.tagline}</div>
+                        
+                        <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: currentLang === 'en' ? '733px' : '673px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '120px' : '150px', lineHeight: currentLang === 'en' ? '140px' : '182px', textAlign: 'center', color: '#B8860B' }}>{texts.intro.title}</div>
+                        
+                        <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: currentLang === 'en' ? '900px' : '890px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '38px' : '44px', lineHeight: currentLang === 'en' ? '58px' : '1.2', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>{texts.intro.description.replace(/\n/g, ' ')}</div>
+
+                        <div style={{ position: 'absolute', width: '1331px', height: '38px', left: 'calc(50% - 1331px/2 + 0.5px)', top: currentLang === 'en' ? '1160px' : '1040px' }}>
+                            <div style={{ position: 'absolute', width: '100%', height: '0px', top: '0px', border: '12px solid #B8860B' }}></div>
+                            <div style={{ position: 'absolute', width: '100%', height: '0px', top: '38px', border: '6px solid #B8860B' }}></div>
+                        </div>
+
+                        <div style={{ position: 'absolute', width: '1148px', height: '1200px', left: 'calc(50% - 1148px/2)', top: currentLang === 'en' ? '1300px' : '1139px', borderRadius: '25px', overflow: 'hidden' }}>
+                            <img src={questionImages.intro} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <button onClick={startQuiz} style={{ position: 'absolute', width: '1050px', height: '210px', left: 'calc(50% - 1050px/2)', top: currentLang === 'en' ? '2220px' : '2092px', background: '#B8860B', boxShadow: '0px 0px 18px 9px #FFFFFF', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '64px' : '96px', color: '#FFFFFF' }}>{texts.intro.button}</button>
+                        
+                        <div style={{ position: 'absolute', width: '1148px', height: '110px', left: '287px', top: currentLang === 'en' ? '2469px' : '2339px', background: '#FFFFFF', borderRadius: '0px 0px 25px 25px' }}></div>
+                        <div style={{ position: 'absolute', width: '1000px', left: 'calc(50% - 1000px/2)', top: currentLang === 'en' ? '2492px' : '2362px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '42px' : '55px', textAlign: 'center', color: '#B8860B' }}>{currentLang === 'zh-TW' ? '*點擊上方按鈕開始您的香味測試' : '*Tap the button above to start your scent quiz'}</div>
+                    </>
+                )}
+
+                {/* 姓名輸入頁面 */}
+                {currentPage === 'nameInput' && (
+                    <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: 60 }}>
+                        <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.nameInput.title}</div>
+                        <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '880px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF' }}>{texts.nameInput.subtitle}</div>
+                        <div style={{ position: 'absolute', width: '900px', height: '140px', left: 'calc(50% - 900px/2)', top: '1100px', background: '#FFFFFF', borderRadius: '25px', display: 'flex', alignItems: 'center', padding: '0 40px', boxSizing: 'border-box' }}>
+                            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '56px', color: playerName ? '#1A1A1A' : '#999999' }}>{playerName || texts.nameInput.placeholder}</div>
+                            <span className="cursor">|</span>
+                        </div>
+                        <div style={{ position: 'absolute', width: '1400px', left: 'calc(50% - 1400px/2)', top: '1350px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+                                {keyboardLetters.map(l => (
+                                    <button key={l} onClick={() => setPlayerName(p => (p+l).slice(0,10))} style={{ width: '150px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: '72px', color: '#FFFFFF' }}>{l}</button>
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: '40px', marginTop: '10px' }}>
+                                <button onClick={() => setPlayerName(p => (p+' ').slice(0,10))} style={{ width: '390px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF' }}>{currentLang==='zh-TW'?'空白':'Space'}</button>
+                                <button onClick={() => setPlayerName(p => p.slice(0,-1))} style={{ width: '390px', height: '150px', borderRadius: '30px', border: '3px solid #B8860B', background: '#2B2B2B', fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF' }}>{currentLang==='zh-TW'?'刪除':'Delete'}</button>
+                                <button onClick={beginQuestions} style={{ width: '390px', height: '150px', borderRadius: '30px', border: 'none', background: '#B8860B', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '60px' : '66px', color: '#FFFFFF', boxShadow: '0 0 18px 6px rgba(255,255,255,0.3)' }}>{texts.nameInput.button}</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 問題頁面 */}
+                {texts.questions.map(q => currentPage === q.id && (
+                    <div key={q.id}>
+                        <div style={{ position: 'absolute', width: '1280px', left: '220px', top: '676px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '64px', textAlign: 'center', color: '#FFFFFF' }}>{texts.header.tagline}</div>
+                        <div style={{ position: 'absolute', width: '1400px', height: '48px', left: '160px', top: currentLang === 'en' ? '828px' : '804px', background: '#333', borderRadius: '43px' }}>
+                            <div style={{ width: `${q.progressWidth}px`, height: '100%', background: '#B8860B', borderRadius: '43px', transition: 'width 0.5s' }}></div>
+                        </div>
+                        <div style={{ position: 'absolute', width: currentLang === 'en' && (q.id === 2 || q.id === 4) ? '1400px' : '1182px', left: currentLang === 'en' && (q.id === 2 || q.id === 4) ? 'calc(50% - 1400px/2)' : 'calc(50% - 1182px/2)', top: currentLang === 'en' ? '1018px' : '994px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#B8860B', whiteSpace: 'pre-line' }}>{q.title}</div>
+                        <div style={{ position: 'absolute', width: '1309px', height: '602px', left: 'calc(50% - 1309px/2)', top: currentLang === 'en' ? '1348px' : '1298px', borderRadius: '25px', overflow: 'hidden' }}>
+                            <img src={q.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div style={{ position: 'absolute', width: '1449px', left: 'calc(50% - 1449px/2)', top: currentLang === 'en' ? '2047px' : '1997px' }}>
+                            <img src={iconA} style={{ position: 'absolute', left: '0px', top: '10px', width: '120px', transform: 'scale(1.2)' }} />
+                            <button onClick={() => handleAnswer(q.id, 0, q.id === 4)} style={{ position: 'absolute', left: '160px', width: '1288px', height: currentLang === 'en' ? '260px' : '245px', border: '6px solid #FFF', borderRadius: '25px', background: 'transparent' }}>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '50px' : '70px', padding: '0 10px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{q.options[0].text}</div>
+                            </button>
+                        </div>
+                        <div style={{ position: 'absolute', width: '1449px', left: 'calc(50% - 1449px/2)', top: currentLang === 'en' ? '2354px' : '2289px' }}>
+                            <img src={iconB} style={{ position: 'absolute', left: '0px', top: '10px', width: '120px', transform: 'scale(1.2)' }} />
+                            <button onClick={() => handleAnswer(q.id, 1, q.id === 4)} style={{ position: 'absolute', left: '160px', width: '1288px', height: currentLang === 'en' ? '260px' : '242px', border: '6px solid #FFF', borderRadius: '25px', background: 'transparent' }}>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '50px' : '70px', padding: '0 10px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{q.options[1].text}</div>
+                            </button>
+                        </div>
+                    </div>
+                ))}
+
+                {/* 🌟 完整升級版結果頁面 - 包含角色圖和背景圖 🌟 */}
+                {currentPage === 'result' && result && (
+                    <div style={{ 
+                        position: 'absolute', width: '100%', height: '100%', 
+                        overflow: 'hidden'
+                    }}>
+                        {/* 背景圖片層 */}
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            zIndex: 1,
+                            opacity: 0.15
+                        }}>
+                            <img src={result.resultData.backgroundImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+
+                        {/* 內容層 */}
+                        <div style={{ 
+                            position: 'relative',
+                            zIndex: 2,
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            paddingTop: '276px',
+                            paddingBottom: '100px'
+                        }}>
+                            {/* 角色圖片 */}
+                            <div style={{
+                                width: '600px',
+                                height: '600px',
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                border: '8px solid #D4AF37',
+                                marginBottom: '40px',
+                                boxShadow: '0 0 40px rgba(212, 175, 55, 0.5)'
+                            }}>
+                                <img src={result.resultData.characterImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+
+                            {/* 問候語 */}
+                            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>
+                                {texts.result.greeting}{playerName}
+                            </div>
+
+                            {/* 標題 */}
+                            <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '88px' : '105px', textAlign: 'center', color: '#D4AF37', marginBottom: '20px' }}>
+                                {texts.result.title}
+                            </div>
+                            <div style={{ width: '779px', height: '0', border: '6px solid #D4AF37', marginBottom: '40px' }}></div>
+                            
+                            {/* MBTI 類型 & 暱稱 */}
+                            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '80px' : '96px', textAlign: 'center', color: '#FFFFFF', marginBottom: '20px' }}>
+                                {result.mbtiType} - {currentLang === 'zh-TW' ? result.resultData.nicknameCN : result.resultData.nicknameEN}
+                            </div>
+
+                            {/* 名言 */}
+                            <div style={{ 
+                                width: currentLang === 'en' ? '1488px' : '1188px', 
+                                fontFamily: "'Inter', sans-serif", 
+                                fontSize: currentLang === 'en' ? '46px' : '55px', 
+                                textAlign: 'center', 
+                                color: '#B8860B', 
+                                fontStyle: 'italic',
+                                marginBottom: '40px'
+                            }}>
+                                {currentLang === 'zh-TW' ? result.resultData.sloganCN : result.resultData.sloganEN}
+                            </div>
+
+                            {/* 描述 */}
+                            <div style={{ 
+                                width: currentLang === 'en' ? '1488px' : '1188px', 
+                                fontFamily: "'Inter', sans-serif", 
+                                fontSize: currentLang === 'en' ? '42px' : '50px', 
+                                textAlign: 'center', 
+                                color: '#FFFFFF', 
+                                whiteSpace: 'pre-wrap', 
+                                wordWrap: 'break-word',
+                                marginBottom: '60px',
+                                lineHeight: '1.4'
+                            }}>
+                                {currentLang === 'zh-TW' ? result.resultData.rationaleCN : result.resultData.rationaleEN}
+                            </div>
+
+                            {/* 推薦標題 */}
+                            <div style={{ 
+                                width: '1412px', 
+                                height: '115px', 
+                                background: '#D4AF37', 
+                                borderRadius: '25px 25px 0 0', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                fontFamily: "'Inter', sans-serif", 
+                                fontWeight: 700, 
+                                fontSize: currentLang === 'en' ? '54px' : '64px', 
+                                color: '#FFFFFF',
+                                flexShrink: 0
+                            }}>
+                                {texts.result.recommendation}
+                            </div>
+
+                            {/* 產品容器 */}
+                            <div style={{ 
+                                width: '1412px', 
+                                boxSizing: 'border-box', 
+                                border: '6px solid #D4AF37', 
+                                borderRadius: '0 0 25px 25px',
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center', 
+                                padding: '50px 70px',
+                                background: 'rgba(26, 26, 26, 0.8)'
+                            }}>
+                                {/* 香調標籤 */}
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '42px', flexWrap: 'wrap', marginBottom: '60px' }}>
+                                    {(currentLang === 'zh-TW' ? result.resultData.fragranceCN : result.resultData.fragranceEN).split(' / ').map((tag, i) => (
+                                        <div key={i} style={{ 
+                                            padding: '19px 52px', 
+                                            height: '148px', 
+                                            background: '#D4AF37', 
+                                            borderRadius: '25px', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            fontFamily: "'Inter', sans-serif", 
+                                            fontWeight: 700, 
+                                            fontSize: currentLang === 'en' ? '56px' : '70px', 
+                                            color: '#FFFFFF', 
+                                            boxSizing: 'border-box' 
+                                        }}>{tag.trim()}</div>
+                                    ))}
+                                </div>
+
+                                {/* 產品卡片 */}
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', gap: '154px', width: '100%' }}>
+                                    {result.resultData.products.slice(0, 2).map((p, i) => (
+                                        <div key={i} style={{ 
+                                            width: '482px', 
+                                            background: '#D4AF37', 
+                                            borderRadius: '25px', 
+                                            padding: '15px', 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            alignItems: 'center' 
+                                        }}>
+                                            <div style={{ 
+                                                width: '458px', 
+                                                height: '458px', 
+                                                borderRadius: '25px', 
+                                                overflow: 'hidden', 
+                                                display:'flex', 
+                                                alignItems:'center', 
+                                                justifyContent:'center', 
+                                                background:'#FFF', 
+                                                marginBottom: '20px', 
+                                                flexShrink: 0 
+                                            }}>
+                                                <img src={p.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                            <div style={{ 
+                                                fontFamily: "'Inter', sans-serif", 
+                                                fontWeight: 700, 
+                                                fontSize: currentLang === 'en' ? '40px' : '45px', 
+                                                color: '#FFFFFF', 
+                                                marginTop: '10px', 
+                                                textAlign: 'center' 
+                                            }}>{p.brand}</div>
+                                            <div style={{ 
+                                                fontFamily: "'Inter', sans-serif", 
+                                                fontWeight: 700, 
+                                                fontSize: currentLang === 'en' ? '48px' : '55px', 
+                                                color: '#FFFFFF', 
+                                                margin: '10px 0', 
+                                                textAlign: 'center' 
+                                            }}>{p.name}</div>
+                                            <div style={{ 
+                                                fontFamily: "'Inter', sans-serif", 
+                                                fontSize: currentLang === 'en' ? '36px' : '40px', 
+                                                lineHeight: '1.3', 
+                                                color: '#FFFFFF', 
+                                                padding: '20px 0', 
+                                                textAlign: 'center', 
+                                                whiteSpace: 'pre-wrap', 
+                                                wordWrap: 'break-word', 
+                                                flex: 1 
+                                            }}>
+                                                {currentLang === 'zh-TW' ? p.descriptionCN : p.descriptionEN}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 底部按鈕 */}
+                            {!isShareMode && (
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '50px' }}>
+                                    <button onClick={restartQuiz} style={{ 
+                                        width: currentLang === 'en' ? '640px' : '540px', 
+                                        height: '123px', 
+                                        background: '#D4AF37', 
+                                        borderRadius: '25px', 
+                                        border: 'none', 
+                                        fontFamily: "'Inter', sans-serif", 
+                                        fontWeight: 700, 
+                                        fontSize: currentLang === 'en' ? '60px' : '70px', 
+                                        color: '#FFFFFF' 
+                                    }}>{texts.restart}</button>
+                                    <button onClick={goToSharePage} style={{ 
+                                        width: currentLang === 'en' ? '640px' : '540px', 
+                                        height: '123px', 
+                                        background: '#FFFFFF', 
+                                        borderRadius: '25px', 
+                                        border: 'none', 
+                                        fontFamily: "'Inter', sans-serif", 
+                                        fontWeight: 700, 
+                                        fontSize: currentLang === 'en' ? '60px' : '70px', 
+                                        color: '#D4AF37' 
+                                    }}>{texts.share}</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* 分享頁面 */}
+                {currentPage === 'share' && (
+                    <>
+                        <div style={{ position: 'absolute', width: '1482px', left: 'calc(50% - 1482px/2)', top: '650px', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '110px' : '130px', textAlign: 'center', color: '#B8860B' }}>{texts.shareQR.title}</div>
+                        <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '880px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '48px' : '56px', textAlign: 'center', color: '#FFFFFF' }}>{texts.shareQR.subtitle}</div>
+                        <div style={{ position: 'absolute', width: '600px', height: '600px', left: 'calc(50% - 600px/2)', top: '1100px', background: '#FFFFFF', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <QRCodeComp value={shareUrl} size={500} />
+                        </div>
+                        <div style={{ position: 'absolute', width: '1280px', left: 'calc(50% - 1280px/2)', top: '1800px', fontFamily: "'Inter', sans-serif", fontSize: currentLang === 'en' ? '42px' : '44px', textAlign: 'center', color: '#FFFFFF', whiteSpace: 'pre-line' }}>{texts.shareQR.instruction}</div>
+                        <button onClick={backToResultPage} style={{ position: 'absolute', width: currentLang === 'en' ? '800px' : '600px', height: '150px', left: currentLang === 'en' ? 'calc(50% - 800px/2)' : 'calc(50% - 600px/2)', bottom: '220px', background: '#B8860B', borderRadius: '25px', border: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: currentLang === 'en' ? '56px' : '72px', color: '#FFFFFF' }}>{texts.shareQR.backButton}</button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ============================================================================
+// 🚀 應用程式啟動
+// ============================================================================
+
+// 等待 DOM 完全載入後再掛載 React 應用程式
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+            throw new Error('Root element not found');
+        }
+        
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+        
+        console.log('✅ App mounted successfully');
+    } catch (error) {
+        console.error('❌ App mount failed:', error);
+        document.getElementById('loading').style.display = 'none';
+        const err = document.getElementById('fatal-error');
+        err.style.display = 'block';
+        err.innerHTML = "⚠️ App Mount Error:\\n" + error.message;
     }
-
-    if(!mounted){
-      // prepare helpful diagnostic message
-      const env = environmentReport();
-      const missing = [];
-      if(!env.react) missing.push('React not loaded (window.React missing)');
-      if(!env.reactDom) missing.push('ReactDOM not loaded (window.ReactDOM missing)');
-      if(!env.babel) missing.push('Babel not loaded (window.Babel missing) — required if your app uses inline JSX with type="text/babel"');
-      if(!env.qrcode) missing.push('qrcodejs not loaded (window.QRCode missing)');
-
-      let msg = "⚠️ Application did not mount.\n\nDetected environment:\n" + JSON.stringify(env, null, 2) + "\n\n";
-      if(missing.length){
-        msg += "Likely issues:\n- " + missing.join("\n- ") + "\n\n";
-      } else {
-        msg += "No obvious missing global libs detected. The problem may be a runtime error in your app code (check Console).\n\n";
-      }
-
-      msg += "Common fixes:\n- Make sure the full app code is present in index.html or your bundled script is loaded (no 404).\n- If you use inline JSX, ensure Babel is present and the app <script type=\"text/babel\"> is after Babel.\n- Open DevTools Console and paste any red errors here so I can diagnose.\n\nAuto details: network may show 404 for /version.json and /favicon.ico — those alone are not fatal.\n";
-
-      // show message in fatal-error overlay
-      const fatal = document.getElementById('fatal-error');
-      if(fatal){
-        fatal.style.display = 'block';
-        fatal.innerText = msg;
-      } else {
-        alert(msg);
-      }
-
-      // hide loader
-      if(loader) loader.style.display = 'none';
-
-      console.warn("App mount check failed — environment:", env);
-    } else {
-      console.log("App appears to have mounted (quick check).");
-      // hide the debug hint
-      try{ document.getElementById('debug-info').style.display = 'none'; }catch(e){}
-      if(loader) loader.style.display = 'none';
-    }
-  }, 2500);
-})();
+});
 </script>
-
-<!-- Auto-reload polling script: checks /version.json and reloads when version changes -->
-<script>
-(function(){
-  const VERSION_URL = '/version.json';
-  let currentVersion = null;
-  async function checkVersion(){
-    try{
-      const res = await fetch(VERSION_URL + '?t=' + Date.now(), { cache: 'no-store' });
-      if(!res.ok) return;
-      const data = await res.json();
-      if(!data || !data.version) return;
-      if(currentVersion && data.version !== currentVersion){
-        try{
-          const params = new URLSearchParams(window.location.search);
-          if(params.get('mode') !== 'share'){
-            console.info('Version changed, reloading to', data.version);
-            location.reload(true);
-          } else {
-            console.info('Version changed but in share mode; skipping reload');
-          }
-        }catch(e){ location.reload(true); }
-      }
-      currentVersion = data.version;
-    }catch(e){ console.warn('version check failed', e); }
-  }
-  // initial check and interval
-  checkVersion();
-  // poll every 15 seconds
-  setInterval(checkVersion, 15000);
-})();
-</script>
-
 </body>
 </html>

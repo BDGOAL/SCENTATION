@@ -738,8 +738,8 @@ const App = () => {
 
     // --- 🚀 獨立掛鉤：數據發送邏輯 ---
 useEffect(() => {
-    // 只有當進入結果頁面，且 result 變數已經有數據時才執行
-    if (currentPage === 'result' && result && result.mbtiType) {
+    // 只有在「非分享模式」且「進入結果頁面」時才發送數據
+    if (!isShareMode && currentPage === 'result' && result && result.mbtiType) {
         const scriptURL = 'https://script.google.com/macros/s/AKfycbxGMPQnqVHiAwrh4PTudMYTiv5Hj7hpGQMKeJwWDTdlQ4enkDdqe7tx1YLaMANOJLM/exec';
         
         fetch(scriptURL, {
@@ -749,13 +749,11 @@ useEffect(() => {
             body: JSON.stringify({
                 name: playerName || 'Anonymous',
                 mbti: result.mbtiType,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toLocaleString() // 改用 LocalString 方便你在 Sheet 直接閱讀時間
             })
         }).catch(err => console.warn("Background sheet sync failed:", err));
-        
-        console.log("Data sent to sheet in background.");
     }
-}, [currentPage]); // 僅當頁面切換時檢查
+}, [currentPage, result, isShareMode]); // 加入依賴項確保邏輯同步
 
     useEffect(() => {
         try {

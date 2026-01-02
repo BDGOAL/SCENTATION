@@ -740,7 +740,7 @@ const App = () => {
 useEffect(() => {
     // 只有當進入結果頁面，且 result 變數已經有數據時才執行
     if (currentPage === 'result' && result && result.mbtiType) {
-        const scriptURL = '你的_GOOGLE_APPS_SCRIPT_URL';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxGMPQnqVHiAwrh4PTudMYTiv5Hj7hpGQMKeJwWDTdlQ4enkDdqe7tx1YLaMANOJLM/exec';
         
         fetch(scriptURL, {
             method: 'POST',

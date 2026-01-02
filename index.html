@@ -736,6 +736,27 @@ const App = () => {
     const texts = translations[currentLang];
     const keyboardLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+    // --- 🚀 獨立掛鉤：數據發送邏輯 ---
+useEffect(() => {
+    // 只有當進入結果頁面，且 result 變數已經有數據時才執行
+    if (currentPage === 'result' && result && result.mbtiType) {
+        const scriptURL = '你的_GOOGLE_APPS_SCRIPT_URL';
+        
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: playerName || 'Anonymous',
+                mbti: result.mbtiType,
+                timestamp: new Date().toISOString()
+            })
+        }).catch(err => console.warn("Background sheet sync failed:", err));
+        
+        console.log("Data sent to sheet in background.");
+    }
+}, [currentPage]); // 僅當頁面切換時檢查
+
     useEffect(() => {
         try {
             const params = new URLSearchParams(window.location.search);
